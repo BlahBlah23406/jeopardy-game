@@ -164,12 +164,9 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
     return (
         <div className="w-full max-w-6xl mx-auto p-4 flex flex-col gap-8 pb-32">
             <header className="text-center space-y-4 relative">
-                <div className="flex flex-col items-center gap-4">
-                    <img src="/logo.png" alt="Dangerous Jeopardy Logo" className="w-24 h-24 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                    <div>
-                        <h1 className="text-4xl font-black text-white uppercase tracking-widest text-shadow-lg">Game Setup</h1>
-                        <p className="text-blue-300">Create your categories and questions.</p>
-                    </div>
+                <div>
+                    <h1 className="text-4xl font-black text-white uppercase tracking-widest text-shadow-lg">Game Setup</h1>
+                    <p className="text-blue-300">Create your categories and questions.</p>
                 </div>
 
                 {/* Import/Export Controls */}

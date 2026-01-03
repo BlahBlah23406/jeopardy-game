@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Team, Question } from '../types';
 
 interface FinalJeopardyGameProps {
@@ -13,6 +14,35 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
     const [phase, setPhase] = useState<'SELECTION' | 'QUESTION' | 'REVEAL'>('SELECTION');
     // const [selectedPlayer, setSelectedPlayer] = useState<{ teamId: string, player: Player } | null>(null); // Unused
     const [answers, setAnswers] = useState<Record<string, { playerId: string, isCorrect: boolean }>>({});
+    const [isReading, setIsReading] = useState(false);
+
+    // TTS Effect
+    useEffect(() => {
+        if (phase === 'QUESTION' && questions[currentQuestionIndex]) {
+            setIsReading(true);
+            const text = questions[currentQuestionIndex].text;
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.onend = () => setIsReading(false);
+            utterance.onerror = () => setIsReading(false);
+
+            window.speechSynthesis.speak(utterance);
+        } else {
+            setIsReading(false);
+            window.speechSynthesis.cancel();
+        }
+
+        return () => {
+            window.speechSynthesis.cancel();
+        };
+    }, [phase, currentQuestionIndex, questions]);
+
+    const handleSkipReading = () => {
+        setIsReading(false);
+        window.speechSynthesis.cancel();
+    };
 
     // Calculate max rounds based on team size (assuming equal teams, otherwise min size)
     // Rule: N - 1 questions. 
@@ -239,8 +269,37 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                             <h3 className="text-yellow-400 font-black tracking-widest text-lg mb-6 uppercase">
                                 For {currentQuestion.points} Points
                             </h3>
-                            <div className="text-4xl md:text-5xl font-serif leading-relaxed">
-                                {currentQuestion.text}
+                            <div className="text-4xl md:text-5xl font-serif leading-relaxed min-h-[200px] flex items-center justify-center">
+                                {isReading ? (
+                                    <div className="flex flex-col items-center gap-6">
+                                        <div className="flex gap-2">
+                                            {[0, 1, 2].map((i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                                                    transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+                                                    className="w-4 h-4 bg-yellow-400 rounded-full"
+                                                />
+                                            ))}
+                                        </div>
+                                        <p className="text-2xl text-yellow-400/80 font-mono animate-pulse">
+                                            Reading Question...
+                                        </p>
+                                        <button
+                                            onClick={handleSkipReading}
+                                            className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold tracking-wider transition-colors border border-white/20 text-white"
+                                        >
+                                            REVEAL NOW
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                    >
+                                        {currentQuestion.text}
+                                    </motion.div>
+                                )}
                             </div>
 
                             {phase === 'REVEAL' && (
