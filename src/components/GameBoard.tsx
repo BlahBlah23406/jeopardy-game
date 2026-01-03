@@ -162,7 +162,7 @@ function QuestionModalContent({ question, teams, onClose, onScore }: {
 
             {/* Team Scoring Buttons - Only visible when revealed */}
             <div className={cn(
-                "grid grid-cols-2 md:grid-cols-4 gap-4 w-full transition-all duration-500",
+                "flex flex-wrap justify-center gap-4 w-full transition-all duration-500",
                 isReading ? "opacity-0 pointer-events-none translate-y-4" : "opacity-100 translate-y-0"
             )}>
                 {teams.map(team => (
@@ -170,7 +170,7 @@ function QuestionModalContent({ question, teams, onClose, onScore }: {
                         key={team.id}
                         onClick={() => onScore(team.id)}
                         disabled={isReading}
-                        className="bg-game-surface hover:bg-game-primary border border-game-accent/30 hover:border-game-accent rounded-xl p-4 flex flex-col items-center gap-2 transition-all hover:scale-105 active:scale-95 group"
+                        className="bg-game-surface hover:bg-game-primary border border-game-accent/30 hover:border-game-accent rounded-xl p-4 flex flex-col items-center gap-2 transition-all hover:scale-105 active:scale-95 group flex-1 min-w-[150px] max-w-[220px]"
                     >
                         <div className="font-bold text-white group-hover:text-yellow-300">
                             {team.name}

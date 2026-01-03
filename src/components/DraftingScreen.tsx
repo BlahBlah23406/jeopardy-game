@@ -15,14 +15,14 @@ export function DraftingScreen({ teams, draftingPool, currentDrafterId, onPick }
             </h2>
 
             {/* Teams / Captains Display */}
-            <div className="grid grid-cols-4 gap-4 flex-1">
+            <div className="flex flex-wrap justify-center gap-4 flex-1">
                 {teams.map(team => {
                     const isDrafting = team.id === currentDrafterId;
                     return (
                         <div
                             key={team.id}
                             className={`
-                                relative flex flex-col items-center bg-gray-900/80 rounded-xl overflow-hidden border-2 transition-all duration-300
+                                relative flex flex-col items-center bg-gray-900/80 rounded-xl overflow-hidden border-2 transition-all duration-300 flex-1 min-w-[200px] max-w-[280px]
                                 ${isDrafting ? 'border-yellow-400 scale-105 shadow-[0_0_30px_rgba(250,204,21,0.5)] z-10' : 'border-gray-700 opacity-70'}
                             `}
                         >

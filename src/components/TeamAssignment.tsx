@@ -23,14 +23,14 @@ export function TeamAssignment({ teams, onConfirm, onUpdateTeam }: TeamAssignmen
                 <p className="text-gray-400 text-lg">Customize your team names and prepare for battle...</p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="flex flex-wrap justify-center gap-6 mb-12">
                 {teams.map((team, index) => (
                     <motion.div
                         key={team.id}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.2 }}
-                        className="bg-game-surface border border-gray-700 rounded-xl p-6 relative overflow-visible group hover:border-game-primary/50 transition-colors"
+                        className="bg-game-surface border border-gray-700 rounded-xl p-6 relative overflow-visible group hover:border-game-primary/50 transition-colors flex-1 min-w-[280px] max-w-[320px]"
                     >
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
                             <Shield className="w-24 h-24" />
