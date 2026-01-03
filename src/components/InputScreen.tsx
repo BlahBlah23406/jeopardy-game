@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Play } from 'lucide-react';
+import { Play } from 'lucide-react';
 // import { cn } from '../lib/utils'; // Fixed import path
 
 interface InputScreenProps {
@@ -32,9 +32,7 @@ export function InputScreen({ onStartGame }: InputScreenProps) {
             className="w-full max-w-2xl bg-game-surface p-8 rounded-2xl shadow-2xl border border-game-primary/20"
         >
             <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-game-primary/20 rounded-full">
-                    <Users className="w-8 h-8 text-game-primary" />
-                </div>
+                <img src="/logo.png" alt="Logo" className="w-12 h-12 drop-shadow-lg" />
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-game-primary to-purple-400 bg-clip-text text-transparent">
                     Player Registration
                 </h2>

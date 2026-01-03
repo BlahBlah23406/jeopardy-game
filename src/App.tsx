@@ -74,16 +74,35 @@ function App() {
             name
         }));
 
-        // 3. Distribute into 4 teams
-        const newTeams: Team[] = [
-            { id: '1', name: 'Team Alpha', players: [], score: 0, playedPlayerIds: [], inventory: [] },
-            { id: '2', name: 'Team Beta', players: [], score: 0, playedPlayerIds: [], inventory: [] },
-            { id: '3', name: 'Team Gamma', players: [], score: 0, playedPlayerIds: [], inventory: [] },
-            { id: '4', name: 'Team Delta', players: [], score: 0, playedPlayerIds: [], inventory: [] },
+        // 3. Determine Number of Teams (Square Heuristic)
+        // Try to make Teams ~= Players Per Team => Teams = sqrt(Total Players)
+        // Minimum 2 teams
+        const totalPlayers = players.length;
+        const optimalTeamCount = Math.max(2, Math.round(Math.sqrt(totalPlayers)));
+
+        const teamNames = [
+            'Team Alpha', 'Team Beta', 'Team Gamma', 'Team Delta',
+            'Team Epsilon', 'Team Zeta', 'Team Eta', 'Team Theta',
+            'Team Iota', 'Team Kappa', 'Team Lambda', 'Team Mu'
         ];
 
+        // 4. Create Teams
+        const newTeams: Team[] = [];
+        for (let i = 0; i < optimalTeamCount; i++) {
+            const name = teamNames[i] || `Team ${i + 1}`;
+            newTeams.push({
+                id: (i + 1).toString(),
+                name,
+                players: [],
+                score: 0,
+                playedPlayerIds: [],
+                inventory: []
+            });
+        }
+
+        // 5. Distribute players
         players.forEach((player, index) => {
-            newTeams[index % 4].players.push(player);
+            newTeams[index % optimalTeamCount].players.push(player);
         });
 
         setTeams(newTeams);
