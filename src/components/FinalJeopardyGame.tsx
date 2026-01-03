@@ -209,13 +209,16 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
 
                                             // Tie breaker involves everyone.
                                             const isTieBreakerRound = currentQuestionIndex === questions.length - 1;
+                                            const isSoloCaptainTeam = team.players.length === 1;
 
                                             let isSelectable = false;
 
                                             if (isTieBreakerRound) {
                                                 isSelectable = true; // No limits
                                             } else {
-                                                if (isCaptain) {
+                                                if (isSoloCaptainTeam) {
+                                                    isSelectable = true; // Solo captain plays all rounds
+                                                } else if (isCaptain) {
                                                     isSelectable = false; // Captain never plays in normal rounds
                                                 } else {
                                                     // Allow if not played OR if all have played (reset condition)
