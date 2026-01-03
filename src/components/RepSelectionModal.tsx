@@ -61,7 +61,7 @@ export function RepSelectionModal({ teams, onConfirm }: RepSelectionModalProps) 
                     <p className="text-gray-400">Select one member from each team to step forward.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="flex flex-wrap justify-center gap-6">
                     {teams.map(team => {
                         const available = getAvailablePlayers(team);
                         const selectedId = selections[team.id];
@@ -69,7 +69,7 @@ export function RepSelectionModal({ teams, onConfirm }: RepSelectionModalProps) 
                         return (
                             <div
                                 key={team.id}
-                                className="bg-game-surface/50 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-xl"
+                                className="flex-1 min-w-[280px] max-w-[320px] bg-game-surface/50 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-xl"
                             >
                                 <div className="text-center font-bold text-xl text-white border-b border-white/10 pb-2">
                                     {team.name}

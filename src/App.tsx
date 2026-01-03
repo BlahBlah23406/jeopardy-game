@@ -78,7 +78,7 @@ function App() {
         // Try to make Teams ~= Players Per Team => Teams = sqrt(Total Players)
         // Minimum 2 teams
         const totalPlayers = players.length;
-        const optimalTeamCount = Math.max(2, Math.round(Math.sqrt(totalPlayers)));
+        const optimalTeamCount = Math.min(4, Math.max(2, Math.round(Math.sqrt(totalPlayers))));
 
         const teamNames = [
             'Team Alpha', 'Team Beta', 'Team Gamma', 'Team Delta',
