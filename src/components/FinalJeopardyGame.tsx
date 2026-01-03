@@ -189,9 +189,9 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                             <p className="text-gray-400">Choose a team member who hasn't played yet.</p>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="flex flex-wrap justify-center gap-4">
                             {teams.map(team => (
-                                <div key={team.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col gap-3">
+                                <div key={team.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col gap-3 flex-1 min-w-[200px] max-w-[250px]">
                                     <h3 className="font-bold text-center border-b border-gray-600 pb-2">{team.name}</h3>
                                     <div className="flex flex-col gap-2">
                                         {team.players.map(player => {
@@ -321,7 +321,7 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                         ) : (
                             <div className="bg-gray-900/90 p-6 rounded-xl border border-gray-700 backdrop-blur">
                                 <h4 className="text-gray-400 uppercase tracking-widest mb-4">Scoring</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="flex flex-wrap justify-center gap-4">
                                     {teams.map(team => {
                                         const playerId = teamSelections[team.id];
                                         const player = team.players.find(p => p.id === playerId);
@@ -336,7 +336,7 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                                         }
 
                                         return (
-                                            <div key={team.id} className="flex flex-col gap-2 p-3 bg-gray-800 rounded border border-gray-700">
+                                            <div key={team.id} className="flex flex-col gap-2 p-3 bg-gray-800 rounded border border-gray-700 flex-1 min-w-[150px] max-w-[200px]">
                                                 <div className="text-xs text-gray-500 truncate">{team.name}</div>
                                                 <div className="font-bold truncate">{player?.name}</div>
                                                 <div className="flex gap-2 justify-center mt-2">
