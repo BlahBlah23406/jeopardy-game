@@ -32,7 +32,7 @@ function App() {
     const [winningTeamId, setWinningTeamId] = useState<string | null>(null);
 
     // Custom Data from Setup
-    const [customCategories, setCustomCategories] = useState<Category[]>([]);
+    const [_customCategories, setCustomCategories] = useState<Category[]>([]);
     const [customFinalJeopardyQuestions, setCustomFinalJeopardyQuestions] = useState<Question[]>([]);
 
     // Initialize Game Data
