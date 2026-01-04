@@ -317,7 +317,7 @@ function App() {
 
                 {phase === 'INTRO_RULES' && (
                     <RulesScreen
-                        title="DANGEROUS JEOPARDY RULES"
+                        title="PARTY JEOPARDY RULES"
                         rules={[
                             { text: "Teams take turns picking a category and point value.", icon: "🎯" },
                             { text: "The team that picks reads the question out loud.", icon: "🗣️" },

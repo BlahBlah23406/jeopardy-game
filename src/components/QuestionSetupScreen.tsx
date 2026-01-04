@@ -42,6 +42,7 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
     ]);
 
     const handleAddCategory = () => {
+        if (categories.length >= 6) return;
         setCategories(prev => [
             ...prev,
             {
@@ -250,9 +251,13 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
 
                 <button
                     onClick={handleAddCategory}
-                    className="w-full py-4 border-2 border-dashed border-gray-600 text-gray-400 rounded-xl hover:border-blue-500 hover:text-blue-400 transition-colors font-bold uppercase tracking-widest"
+                    disabled={categories.length >= 6}
+                    className={`w-full py-4 border-2 border-dashed border-gray-600 text-gray-400 rounded-xl transition-colors font-bold uppercase tracking-widest ${categories.length >= 6
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:border-blue-500 hover:text-blue-400'
+                        }`}
                 >
-                    + Add Category
+                    {categories.length >= 6 ? 'Category Limit Reached (Max 6)' : '+ Add Category'}
                 </button>
             </div>
 
