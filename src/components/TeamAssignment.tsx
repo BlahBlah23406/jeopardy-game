@@ -1,7 +1,9 @@
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Team } from '../types';
-import { Shield, Sparkles } from 'lucide-react';
+import { Team, Player } from '../types';
+import { Shield, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { MovePlayerModal } from './MovePlayerModal';
 
 interface TeamAssignmentProps {
     teams: Team[];
@@ -10,6 +12,30 @@ interface TeamAssignmentProps {
 }
 
 export function TeamAssignment({ teams, onConfirm, onUpdateTeam }: TeamAssignmentProps) {
+    const [movingPlayer, setMovingPlayer] = useState<{ player: Player, teamId: string } | null>(null);
+
+    const handleMovePlayer = (targetTeamId: string) => {
+        if (!movingPlayer) return;
+
+        const { player, teamId: sourceTeamId } = movingPlayer;
+        const sourceTeam = teams.find(t => t.id === sourceTeamId);
+        const targetTeam = teams.find(t => t.id === targetTeamId);
+
+        if (sourceTeam && targetTeam) {
+            // Remove from source
+            onUpdateTeam(sourceTeamId, {
+                players: sourceTeam.players.filter(p => p.id !== player.id)
+            });
+
+            // Add to target
+            onUpdateTeam(targetTeamId, {
+                players: [...targetTeam.players, player]
+            });
+        }
+
+        setMovingPlayer(null);
+    };
+
     return (
         <div className="w-full max-w-6xl">
             <motion.div
@@ -55,9 +81,18 @@ export function TeamAssignment({ teams, onConfirm, onUpdateTeam }: TeamAssignmen
 
                         <ul className="space-y-2 relative z-10">
                             {team.players.map(player => (
-                                <li key={player.id} className="text-gray-300 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-game-accent rounded-full" />
-                                    {player.name}
+                                <li key={player.id} className="text-gray-300 flex items-center justify-between gap-2 group/player p-1 rounded hover:bg-white/5 transition-colors">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-game-accent rounded-full" />
+                                        {player.name}
+                                    </div>
+                                    <button
+                                        onClick={() => setMovingPlayer({ player, teamId: team.id })}
+                                        className="opacity-0 group-hover/player:opacity-100 p-1 hover:bg-game-primary/20 rounded text-gray-400 hover:text-game-accent transition-all"
+                                        title="Move Player"
+                                    >
+                                        <ArrowRightLeft size={14} />
+                                    </button>
                                 </li>
                             ))}
                         </ul>
@@ -79,6 +114,15 @@ export function TeamAssignment({ teams, onConfirm, onUpdateTeam }: TeamAssignmen
                     Enter the Arena
                 </button>
             </motion.div>
+
+            <MovePlayerModal
+                isOpen={!!movingPlayer}
+                onClose={() => setMovingPlayer(null)}
+                player={movingPlayer?.player || null}
+                currentTeamId={movingPlayer?.teamId || ''}
+                teams={teams}
+                onMove={handleMovePlayer}
+            />
         </div>
     );
 }

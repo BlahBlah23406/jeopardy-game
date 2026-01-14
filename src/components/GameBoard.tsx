@@ -26,11 +26,12 @@ const createAdvantageCard = (type: import('../types').AdvantageCardType): import
     }
 };
 
-function QuestionModalContent({ question, teams, onClose, onScore }: {
+function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: {
     question: Question;
     teams: Team[];
     onClose: () => void;
     onScore: (teamId: string) => void;
+    onNoScore: () => void;
 }) {
     const [isReading, setIsReading] = useState(true);
     const [showInfo, setShowInfo] = useState(false);
@@ -181,6 +182,15 @@ function QuestionModalContent({ question, teams, onClose, onScore }: {
                         </div>
                     </button>
                 ))}
+
+                {/* No Points Option */}
+                <button
+                    onClick={onNoScore}
+                    className="bg-gray-800/50 hover:bg-gray-700/80 border border-gray-600 hover:border-gray-400 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 flex-1 min-w-[150px] max-w-[220px]"
+                >
+                    <div className="font-bold text-gray-400">No Winner</div>
+                    <div className="text-sm text-gray-500">Discard Question</div>
+                </button>
             </div>
         </motion.div>
     );
@@ -291,6 +301,12 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
         setActiveQuestion(null);
     };
 
+    const handleNoScore = () => {
+        if (!activeQuestion) return;
+        onQuestionAnswered(activeQuestion.id);
+        setActiveQuestion(null);
+    };
+
     return (
         <div className="w-full max-w-7xl mx-auto p-4 flex flex-col h-[65vh] relative mb-48 mt-16">
             {/* Header / Controls */}
@@ -374,6 +390,7 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
                             teams={teams}
                             onClose={() => setActiveQuestion(null)}
                             onScore={handleTeamScore}
+                            onNoScore={handleNoScore}
                         />
                     </motion.div>
                 )}

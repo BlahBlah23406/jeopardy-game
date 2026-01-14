@@ -108,6 +108,7 @@ export function ScoreBoard({ teams, activeTeamId, onSetActiveTeam, onUpdateTeam,
                 {managingTeamId && (
                     <TeamManagementModal
                         team={teams.find(t => t.id === managingTeamId)!}
+                        teams={teams}
                         onUpdateTeam={onUpdateTeam}
                         onClose={() => setManagingTeamId(null)}
                     />

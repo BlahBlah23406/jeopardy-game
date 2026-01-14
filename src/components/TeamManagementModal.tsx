@@ -1,17 +1,21 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Team } from '../types';
-import { X, Trash2, Save, Minus, Plus } from 'lucide-react';
+import { Player, Team } from '../types';
+import { X, Trash2, Save, Minus, Plus, ArrowRightLeft } from 'lucide-react';
+import { MovePlayerModal } from './MovePlayerModal';
 
 interface TeamManagementModalProps {
     team: Team;
+    teams: Team[];
     onUpdateTeam: (teamId: string, updates: Partial<Team>) => void;
     onClose: () => void;
 }
 
-export function TeamManagementModal({ team, onUpdateTeam, onClose }: TeamManagementModalProps) {
+export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: TeamManagementModalProps) {
     const [score, setScore] = useState(team.score);
     const [name, setName] = useState(team.name);
+    const [movingPlayer, setMovingPlayer] = useState<Player | null>(null);
 
     const handleSave = () => {
         onUpdateTeam(team.id, { score, name });
@@ -26,6 +30,24 @@ export function TeamManagementModal({ team, onUpdateTeam, onClose }: TeamManagem
             players: updatedPlayers,
             playedPlayerIds: updatedPlayedIds
         });
+    };
+
+    const handleMovePlayer = (targetTeamId: string) => {
+        if (!movingPlayer) return;
+
+        const targetTeam = teams.find(t => t.id === targetTeamId);
+
+        if (targetTeam) {
+            // Remove from current (this modal's team)
+            handleRemovePlayer(movingPlayer.id);
+
+            // Add to target
+            onUpdateTeam(targetTeamId, {
+                players: [...targetTeam.players, movingPlayer]
+            });
+        }
+
+        setMovingPlayer(null);
     };
 
     return (
@@ -88,13 +110,22 @@ export function TeamManagementModal({ team, onUpdateTeam, onClose }: TeamManagem
                             {team.players.map(player => (
                                 <div key={player.id} className="flex justify-between items-center bg-black/20 p-2 rounded hover:bg-black/40 transition-colors group">
                                     <span className="text-white">{player.name}</span>
-                                    <button
-                                        onClick={() => handleRemovePlayer(player.id)}
-                                        className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                                        title="Remove Player"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                        <button
+                                            onClick={() => setMovingPlayer(player)}
+                                            className="text-gray-400 hover:text-game-accent p-1"
+                                            title="Move Player"
+                                        >
+                                            <ArrowRightLeft className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleRemovePlayer(player.id)}
+                                            className="text-gray-400 hover:text-red-400 p-1"
+                                            title="Remove Player"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                             {team.players.length === 0 && (
@@ -111,6 +142,15 @@ export function TeamManagementModal({ team, onUpdateTeam, onClose }: TeamManagem
                         Save Changes
                     </button>
                 </div>
+
+                <MovePlayerModal
+                    isOpen={!!movingPlayer}
+                    onClose={() => setMovingPlayer(null)}
+                    player={movingPlayer}
+                    currentTeamId={team.id}
+                    teams={teams}
+                    onMove={handleMovePlayer}
+                />
             </motion.div>
         </div>
     );
