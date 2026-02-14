@@ -16,6 +16,7 @@ describe('InputScreen', () => {
         fireEvent.change(input, { target: { value: 'Alice\nBob\nCharlie\nDavid' } });
 
         const button = screen.getByText('Generate Teams');
+        expect(button).not.toBeDisabled();
         fireEvent.click(button);
 
         expect(handleStartGame).toHaveBeenCalledWith(['Alice', 'Bob', 'Charlie', 'David']);
@@ -29,24 +30,25 @@ describe('InputScreen', () => {
         fireEvent.change(input, { target: { value: 'Alice, Bob, Charlie, David' } });
 
         const button = screen.getByText('Generate Teams');
+        expect(button).not.toBeDisabled();
         fireEvent.click(button);
 
         expect(handleStartGame).toHaveBeenCalledWith(['Alice', 'Bob', 'Charlie', 'David']);
     });
 
-    it('should alert if fewer than 4 players', () => {
+    it('should disable button if fewer than 4 players', () => {
         const handleStartGame = vi.fn();
-        const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => { });
         render(<InputScreen onStartGame={handleStartGame} />);
 
         const input = screen.getByPlaceholderText(/Alice/);
         fireEvent.change(input, { target: { value: 'Alice\nBob' } });
 
-        const button = screen.getByText('Generate Teams');
+        // Button should be disabled and show remaining count
+        const button = screen.getByText(/Add 2 more players/i);
+        expect(button).toBeDisabled();
+
         fireEvent.click(button);
 
-        expect(alertMock).toHaveBeenCalledWith('Please enter at least 4 players!');
         expect(handleStartGame).not.toHaveBeenCalled();
-        alertMock.mockRestore();
     });
 });
