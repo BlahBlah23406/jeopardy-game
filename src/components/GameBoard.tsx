@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RepSelectionModal } from './RepSelectionModal';
 import { RevealModal } from './RevealModal';
@@ -196,6 +196,61 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
     );
 }
 
+// Memoized Column Component
+const CategoryColumn = memo(({ category, onQuestionClick, isCategoryRevealed }: {
+    category: Category,
+    onQuestionClick: (q: Question) => void,
+    isCategoryRevealed: boolean
+}) => {
+    return (
+        <div className="flex flex-col gap-4 h-full">
+            {/* Header */}
+            <div className="bg-game-primary/80 text-center py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center h-24 border border-blue-400/30">
+                <span className="line-clamp-2 px-2 uppercase tracking-wider text-shadow transition-all duration-500">
+                    {isCategoryRevealed ? category.title : "???"}
+                </span>
+            </div>
+
+            {/* Questions */}
+            <div className="flex-1 flex flex-col gap-4">
+                {category.questions.map((q) => (
+                    <motion.button
+                        key={q.id}
+                        onClick={() => onQuestionClick(q)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={cn(
+                            "flex-1 rounded-lg font-bold text-2xl shadow-md transition-all flex items-center justify-center relative overflow-hidden",
+                            q.isAnswered
+                                ? "bg-gray-900/80 text-gray-600 border border-gray-800"
+                                : "bg-game-surface text-game-accent hover:bg-game-surface/80 hover:text-yellow-300 border border-game-accent/20 hover:border-game-accent"
+                        )}
+                    >
+                        {/* HIDDEN Revealed Indicators - Only show when answered (history) */}
+                        {q.isDoubleJeopardy && q.isAnswered && (
+                            <div className="absolute top-1 right-1 text-[8px] uppercase tracking-widest font-black text-yellow-300 opacity-70">
+                                2x
+                            </div>
+                        )}
+
+                        {/* Show Advantage indicator only after answered */}
+                        {q.rewardCard && q.isAnswered && (
+                            <div className="absolute top-1 left-1 text-[8px] uppercase tracking-widest font-black text-blue-300 opacity-70">
+                                ★
+                            </div>
+                        )}
+
+                        <span className={cn(q.isAnswered ? "opacity-30 text-gray-500" : "")}>
+                            {q.points}
+                        </span>
+                    </motion.button>
+                ))}
+            </div>
+        </div>
+    );
+});
+CategoryColumn.displayName = "CategoryColumn";
+
 export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, onAddPlayerRequest, pointsMultiplier, onQuestionSelected, onQuestionAnswered }: GameBoardProps) {
     const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
     const [pendingQuestion, setPendingQuestion] = useState<Question | null>(null);
@@ -204,7 +259,7 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
 
     // Removed handleAddPlayer
 
-    const handleQuestionClick = (q: Question) => {
+    const handleQuestionClick = useCallback((q: Question) => {
         if (!q.isAnswered) {
             // Calculate Points Logic
             let points = q.points;
@@ -246,7 +301,7 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
 
             onQuestionSelected(); // Notify parent to reset multiplier
         }
-    };
+    }, [pointsMultiplier, onQuestionSelected]);
 
     const handleRevealClose = () => {
         setRevealType(null);
@@ -327,51 +382,12 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
                     const isRevealed = category.questions.some(q => q.isAnswered) || (activeQuestion?.id.startsWith(category.id));
 
                     return (
-                        <div key={category.id} className="flex flex-col gap-4 h-full">
-                            {/* Header */}
-                            <div className="bg-game-primary/80 text-center py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center h-24 border border-blue-400/30">
-                                <span className="line-clamp-2 px-2 uppercase tracking-wider text-shadow transition-all duration-500">
-                                    {isRevealed ? category.title : "???"}
-                                </span>
-                            </div>
-
-                            {/* Questions */}
-                            <div className="flex-1 flex flex-col gap-4">
-                                {category.questions.map((q) => (
-                                    <motion.button
-                                        key={q.id}
-                                        onClick={() => handleQuestionClick(q)}
-                                        // disabled={q.isAnswered} // Allow re-selection
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={cn(
-                                            "flex-1 rounded-lg font-bold text-2xl shadow-md transition-all flex items-center justify-center relative overflow-hidden",
-                                            q.isAnswered
-                                                ? "bg-gray-900/80 text-gray-600 border border-gray-800"
-                                                : "bg-game-surface text-game-accent hover:bg-game-surface/80 hover:text-yellow-300 border border-game-accent/20 hover:border-game-accent"
-                                        )}
-                                    >
-                                        {/* HIDDEN Revealed Indicators - Only show when answered (history) */}
-                                        {q.isDoubleJeopardy && q.isAnswered && (
-                                            <div className="absolute top-1 right-1 text-[8px] uppercase tracking-widest font-black text-yellow-300 opacity-70">
-                                                2x
-                                            </div>
-                                        )}
-
-                                        {/* Show Advantage indicator only after answered */}
-                                        {q.rewardCard && q.isAnswered && (
-                                            <div className="absolute top-1 left-1 text-[8px] uppercase tracking-widest font-black text-blue-300 opacity-70">
-                                                ★
-                                            </div>
-                                        )}
-
-                                        <span className={cn(q.isAnswered ? "opacity-30 text-gray-500" : "")}>
-                                            {q.points}
-                                        </span>
-                                    </motion.button>
-                                ))}
-                            </div>
-                        </div>
+                        <CategoryColumn
+                            key={category.id}
+                            category={category}
+                            onQuestionClick={handleQuestionClick}
+                            isCategoryRevealed={!!isRevealed}
+                        />
                     );
                 })}
             </div>
