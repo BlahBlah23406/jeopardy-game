@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GamePhase, Player, Team, Category, AdvantageCard, Question } from './types';
 import { InputScreen } from './components/InputScreen';
 import { TeamAssignment } from './components/TeamAssignment';
@@ -119,7 +119,7 @@ function App() {
         setPhase('GAME');
     };
 
-    const handleUpdateTeam = (teamId: string, updates: Partial<Team>) => {
+    const handleUpdateTeam = useCallback((teamId: string, updates: Partial<Team>) => {
         setTeams(prev => prev.map(team => {
             if (team.id !== teamId) return team;
 
@@ -149,7 +149,7 @@ function App() {
 
             return { ...team, ...finalUpdates };
         }));
-    };
+    }, []);
 
     const handleAddPlayer = (name: string) => {
         // Find smallest team
@@ -192,14 +192,24 @@ function App() {
         handleUpdateTeam(teamId, { inventory: newInventory });
     };
 
-    const handleQuestionAnswered = (questionId: string) => {
-        setCategories(prev => prev.map(cat => ({
-            ...cat,
-            questions: cat.questions.map(q =>
-                q.id === questionId ? { ...q, isAnswered: true } : q
-            )
-        })));
-    };
+    const handleQuestionAnswered = useCallback((questionId: string) => {
+        setCategories(prev => prev.map(cat => {
+            // OPTIMIZATION: Check if this category contains the question.
+            // If not, return the existing category reference to prevent unnecessary re-renders.
+            const hasQuestion = cat.questions.some(q => q.id === questionId);
+            if (!hasQuestion) return cat;
+
+            return {
+                ...cat,
+                questions: cat.questions.map(q =>
+                    q.id === questionId ? { ...q, isAnswered: true } : q
+                )
+            };
+        }));
+    }, []);
+
+    const handleAddPlayerRequest = useCallback(() => setIsAddPlayerModalOpen(true), []);
+    const handleQuestionSelected = useCallback(() => setPointsMultiplier(1), []);
 
     // Check for Game Over
     useEffect(() => {
@@ -337,9 +347,9 @@ function App() {
                             teams={teams}
                             onUpdateTeam={handleUpdateTeam}
                             onSetActiveTeam={setActiveTeamId}
-                            onAddPlayerRequest={() => setIsAddPlayerModalOpen(true)}
+                            onAddPlayerRequest={handleAddPlayerRequest}
                             pointsMultiplier={pointsMultiplier}
-                            onQuestionSelected={() => setPointsMultiplier(1)}
+                            onQuestionSelected={handleQuestionSelected}
                             onQuestionAnswered={handleQuestionAnswered}
                         />
                         {/* Dev Button to Force End Game */}

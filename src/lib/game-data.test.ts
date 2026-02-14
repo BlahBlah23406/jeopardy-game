@@ -12,13 +12,9 @@ describe('generateGameData', () => {
         categories.forEach((cat) => {
             expect(cat.questions).toHaveLength(5);
             cat.questions.forEach((q, index) => {
-                // Points should be (index + 1) * 100, OR doubled if DJ
+                // Points should be (index + 1) * 100. Double Jeopardy multiplier is applied at runtime.
                 const basePoints = (index + 1) * 100;
-                if (q.isDoubleJeopardy) {
-                    expect(q.points).toBe(basePoints * 2);
-                } else {
-                    expect(q.points).toBe(basePoints);
-                }
+                expect(q.points).toBe(basePoints);
             });
         });
     });

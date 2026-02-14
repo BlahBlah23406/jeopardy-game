@@ -9,12 +9,20 @@ import { GameBoard } from './components/GameBoard';
 describe('App Component', () => {
     it('renders the initial input screen', () => {
         render(<App />);
+        // Setup Phase
+        const continueBtn = screen.getByText('Continue to Players');
+        fireEvent.click(continueBtn);
+
         expect(screen.getByText('Generate Teams')).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/Alice/)).toBeInTheDocument();
     });
 
     it('allows entering players and progressing to game', () => {
         render(<App />);
+        // Setup Phase
+        const continueBtn = screen.getByText('Continue to Players');
+        fireEvent.click(continueBtn);
+
         const textarea = screen.getByPlaceholderText(/Alice/);
         fireEvent.change(textarea, { target: { value: 'Alice\nBob\nCharlie\nDave' } });
 
@@ -34,7 +42,7 @@ describe('GameBoard Logic', () => {
         categories: [
             {
                 id: '1', title: 'Test Cat', questions: [
-                    { id: 'q1', points: 100, text: 'Q1 Text', answer: 'A1', isAnswered: false, isDoubleJeopardy: false }
+                    { id: 'q1', points: 100, text: 'Q1 Text', answer: 'A1', isAnswered: true, isDoubleJeopardy: false }
                 ]
             }
         ],
@@ -54,7 +62,18 @@ describe('GameBoard Logic', () => {
     });
 
     it('opens rep selection modal on click', () => {
-        render(<GameBoard {...mockProps} />);
+        // Create props where question is NOT answered so it's clickable
+        const clickableProps = {
+            ...mockProps,
+            categories: [
+                {
+                    id: '1', title: 'Test Cat', questions: [
+                        { id: 'q1', points: 100, text: 'Q1 Text', answer: 'A1', isAnswered: false, isDoubleJeopardy: false }
+                    ]
+                }
+            ]
+        };
+        render(<GameBoard {...clickableProps} />);
         const questionBtn = screen.getByText('100');
         fireEvent.click(questionBtn);
 
