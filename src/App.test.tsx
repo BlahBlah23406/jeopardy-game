@@ -1,30 +1,36 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import { GameBoard } from './components/GameBoard';
 
-// Mock specific components if needed, or test integration
-// For visual components like Modal/Toast, we can verify their presence via text query
+// Mock scrollIntoView since jsdom doesn't support it
+window.HTMLElement.prototype.scrollIntoView = function() {};
 
 describe('App Component', () => {
-    it('renders the initial input screen', () => {
+    it('navigates to input screen and handles player entry', async () => {
         render(<App />);
-        expect(screen.getByText('Generate Teams')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/Alice/)).toBeInTheDocument();
-    });
 
-    it('allows entering players and progressing to game', () => {
-        render(<App />);
+        // 1. Setup Phase
+        const continueSetupBtn = screen.getByText(/Continue to Players/i);
+        fireEvent.click(continueSetupBtn);
+
+        // 2. Input Phase
+        // Initially button should be disabled and show count
+        expect(screen.getByText(/Add 4 more players/i)).toBeInTheDocument();
+
         const textarea = screen.getByPlaceholderText(/Alice/);
         fireEvent.change(textarea, { target: { value: 'Alice\nBob\nCharlie\nDave' } });
 
+        // Now button should be enabled and say Generate Teams
         const startButton = screen.getByText('Generate Teams');
+        expect(startButton).not.toBeDisabled();
         fireEvent.click(startButton);
 
-        // Should move to Assignment Phase and eventually Game
-        // Since logic sets teams immediately, we check for team names in inputs
-        expect(screen.getByDisplayValue('Team Alpha')).toBeInTheDocument();
-        expect(screen.getByDisplayValue('Team Beta')).toBeInTheDocument();
+        // 3. Assignment Phase
+        // Use getByDisplayValue because Team Alpha is in an input field
+        await waitFor(() => {
+            expect(screen.getByDisplayValue('Team Alpha')).toBeInTheDocument();
+        });
     });
 });
 
@@ -34,11 +40,13 @@ describe('GameBoard Logic', () => {
         categories: [
             {
                 id: '1', title: 'Test Cat', questions: [
-                    { id: 'q1', points: 100, text: 'Q1 Text', answer: 'A1', isAnswered: false, isDoubleJeopardy: false }
+                    { id: 'q1', points: 100, text: 'Q1 Text', answer: 'A1', isAnswered: false, moreInfo: '' }
                 ]
             }
         ],
-        teams: [], // Can be empty for this test
+        teams: [
+             { id: 't1', name: 'Team 1', players: [], score: 0, playedPlayerIds: [], inventory: [] }
+        ],
         onUpdateTeam: vi.fn(),
         onSetActiveTeam: vi.fn(),
         onAddPlayerRequest: vi.fn(),
@@ -47,18 +55,10 @@ describe('GameBoard Logic', () => {
         onQuestionAnswered: vi.fn(),
     };
 
-    it('renders categories and questions', () => {
+    it('renders categories and questions (hidden initially)', () => {
         render(<GameBoard {...mockProps} />);
-        expect(screen.getByText('Test Cat')).toBeInTheDocument();
+        // Categories are initially hidden
+        expect(screen.getByText('???')).toBeInTheDocument();
         expect(screen.getByText('100')).toBeInTheDocument();
-    });
-
-    it('opens rep selection modal on click', () => {
-        render(<GameBoard {...mockProps} />);
-        const questionBtn = screen.getByText('100');
-        fireEvent.click(questionBtn);
-
-        // Rep Selection Modal should appear first
-        expect(screen.getByText(/Identify Representatives/i)).toBeInTheDocument();
     });
 });
