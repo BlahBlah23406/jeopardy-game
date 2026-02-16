@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Play } from 'lucide-react';
+import { Users, Play, AlertCircle, CheckCircle2 } from 'lucide-react';
 // import { cn } from '../lib/utils'; // Fixed import path
 
 interface InputScreenProps {
@@ -10,18 +10,17 @@ interface InputScreenProps {
 export function InputScreen({ onStartGame }: InputScreenProps) {
     const [input, setInput] = useState('');
 
+    // Parse players
+    const players = input
+        .split(/[\n,]/)
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+    const playerCount = players.length;
+    const isValid = playerCount >= 4;
+
     const handleStart = () => {
-        // Split by newlines or commas and filter empty strings
-        const players = input
-            .split(/[\n,]/)
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
-
-        if (players.length < 4) {
-            alert('Please enter at least 4 players!');
-            return;
-        }
-
+        if (!isValid) return;
         onStartGame(players);
     };
 
@@ -41,21 +40,49 @@ export function InputScreen({ onStartGame }: InputScreenProps) {
             </div>
 
             <div className="space-y-4">
-                <label className="block text-sm text-gray-400">
-                    Enter player names (one per line or comma separated)
-                </label>
+                <div className="flex justify-between items-end">
+                    <label htmlFor="players-input" className="block text-sm text-gray-400 font-medium">
+                        Enter player names <span className="text-gray-500">(one per line or comma separated)</span>
+                    </label>
+                    <span
+                        id="player-count-help"
+                        className={`text-sm flex items-center gap-1.5 transition-colors duration-300 ${
+                            isValid ? 'text-green-400' : 'text-amber-400'
+                        }`}
+                        aria-live="polite"
+                    >
+                        {isValid ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                            <AlertCircle className="w-4 h-4" />
+                        )}
+                        {playerCount} / 4 required
+                    </span>
+                </div>
+
                 <textarea
+                    id="players-input"
+                    aria-describedby="player-count-help"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="w-full h-64 bg-game-dark/50 border border-gray-700 rounded-xl p-4 text-lg focus:ring-2 focus:ring-game-primary focus:outline-none transition-all resize-none"
+                    className={`w-full h-64 bg-game-dark/50 border rounded-xl p-4 text-lg focus:ring-2 focus:outline-none transition-all resize-none ${
+                        isValid
+                            ? 'border-gray-700 focus:ring-game-primary'
+                            : 'border-amber-500/30 focus:ring-amber-500/50'
+                    }`}
                     placeholder="Alice&#10;Bob&#10;Charlie&#10;David..."
                 />
 
                 <button
                     onClick={handleStart}
-                    className="w-full py-4 bg-gradient-to-r from-game-primary to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transform transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20"
+                    disabled={!isValid}
+                    className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transform transition-all shadow-lg ${
+                        isValid
+                            ? 'bg-gradient-to-r from-game-primary to-blue-600 hover:from-blue-400 hover:to-blue-500 hover:scale-[1.02] active:scale-[0.98] shadow-blue-500/20 cursor-pointer text-white'
+                            : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
+                    }`}
                 >
-                    <Play className="w-5 h-5" />
+                    <Play className={`w-5 h-5 ${isValid ? '' : 'opacity-50'}`} />
                     Generate Teams
                 </button>
             </div>
