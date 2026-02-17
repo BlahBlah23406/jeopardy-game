@@ -1,0 +1,1 @@
+## 2024-05-22 - Input Validation Feedback\n**Learning:** Hidden form constraints (like "minimum 4 players") cause user frustration when only revealed on submission.\n**Action:** Always surface critical constraints (counts, limits) in helper text and validate in real-time.
