@@ -93,7 +93,7 @@ You must return your judgment EXACTLY as a JSON object with this interface:
   "explanation": string // a short 1-2 sentence explanation of your ruling
 }
 
-Return ONLY the raw JSON object. Do not include markdown formatting blocks like \`\`\`json.`;
+Return ONLY the raw JSON object. Do not reveal the term in the explanation, if needed refer to it as "the term". Do not include markdown formatting blocks like \`\`\`json.`;
 
     const userPrompt = `Question: "${questionText}"\nOfficial Answer: "${correctAnswer}"\nUser's Attempt: "${userAnswer}"`;
 

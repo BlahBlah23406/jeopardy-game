@@ -24,11 +24,18 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
 
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
+
+            // Prevent GC
+            (window as any)._currentGameUtterance = utterance;
+
             utterance.rate = 1.0;
             utterance.onend = () => setIsReading(false);
             utterance.onerror = () => setIsReading(false);
 
-            window.speechSynthesis.speak(utterance);
+            setTimeout(() => {
+                window.speechSynthesis.resume();
+                window.speechSynthesis.speak(utterance);
+            }, 50);
         } else {
             setIsReading(false);
             window.speechSynthesis.cancel();

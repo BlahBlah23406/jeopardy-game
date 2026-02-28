@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FinalJeopardyGame } from './FinalJeopardyGame';
 import { Team, Question } from '../types';
 
@@ -17,6 +17,7 @@ describe('FinalJeopardyGame Speech Synthesis', () => {
         window.speechSynthesis = {
             speak: mockSpeak,
             cancel: mockCancel,
+            resume: vi.fn(),
         } as unknown as SpeechSynthesis;
 
         window.SpeechSynthesisUtterance = vi.fn().mockImplementation(function (this: any, text: string) {
@@ -29,6 +30,10 @@ describe('FinalJeopardyGame Speech Synthesis', () => {
         }) as any;
 
         capturedUtterance = null;
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     const mockTeams: Team[] = [
@@ -60,8 +65,11 @@ describe('FinalJeopardyGame Speech Synthesis', () => {
         const startButton = screen.getByText('Start Question');
         fireEvent.click(startButton);
 
-        // Verify speaking state
-        expect(mockSpeak).toHaveBeenCalledTimes(1);
+        // Wait for setTimeout to execute Speak
+        await waitFor(() => {
+            expect(mockSpeak).toHaveBeenCalledTimes(1);
+        }, { timeout: 1000 });
+
         expect(capturedUtterance).not.toBeNull();
         expect(capturedUtterance?.text).toBe('This is the final jeopardy text.');
 

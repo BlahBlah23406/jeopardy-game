@@ -85,6 +85,9 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(question.text);
+        // Prevent garbage collection by keeping a reference
+        (window as any)._currentGameUtterance = utterance;
+
         utterance.rate = 1.0; // Normal rate
         utterance.onend = () => {
             setIsReading(false);
@@ -93,7 +96,12 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
             setIsReading(false); // In case of error, show text
         };
 
-        window.speechSynthesis.speak(utterance);
+        // Chrome/Safari sometimes need a slight delay after cancel
+        setTimeout(() => {
+            // Also resume in case speech synthesis was paused globally
+            window.speechSynthesis.resume();
+            window.speechSynthesis.speak(utterance);
+        }, 50);
 
         // Cleanup on unmount or close
         return () => {
