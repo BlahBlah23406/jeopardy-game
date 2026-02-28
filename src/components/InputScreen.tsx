@@ -10,19 +10,17 @@ interface InputScreenProps {
 export function InputScreen({ onStartGame }: InputScreenProps) {
     const [input, setInput] = useState('');
 
+    // Parse players on every render to provide live feedback
+    const validPlayers = input
+        .split(/[\n,]/)
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+    const isValid = validPlayers.length >= 4;
+
     const handleStart = () => {
-        // Split by newlines or commas and filter empty strings
-        const players = input
-            .split(/[\n,]/)
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
-
-        if (players.length < 4) {
-            alert('Please enter at least 4 players!');
-            return;
-        }
-
-        onStartGame(players);
+        if (!isValid) return;
+        onStartGame(validPlayers);
     };
 
     return (
@@ -41,19 +39,36 @@ export function InputScreen({ onStartGame }: InputScreenProps) {
             </div>
 
             <div className="space-y-4">
-                <label className="block text-sm text-gray-400">
+                <label htmlFor="player-input" className="block text-sm text-gray-400">
                     Enter player names (one per line or comma separated)
                 </label>
                 <textarea
+                    id="player-input"
+                    aria-describedby="player-count-helper"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     className="w-full h-64 bg-game-dark/50 border border-gray-700 rounded-xl p-4 text-lg focus:ring-2 focus:ring-game-primary focus:outline-none transition-all resize-none"
                     placeholder="Alice&#10;Bob&#10;Charlie&#10;David..."
                 />
 
+                <div className="flex justify-between items-center px-1">
+                    <p
+                        id="player-count-helper"
+                        className={`text-sm font-medium transition-colors ${isValid ? 'text-green-400' : 'text-orange-400'}`}
+                        aria-live="polite"
+                    >
+                        {validPlayers.length} players entered {isValid ? '✅' : '(minimum 4 required)'}
+                    </p>
+                </div>
+
                 <button
                     onClick={handleStart}
-                    className="w-full py-4 bg-gradient-to-r from-game-primary to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transform transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20"
+                    disabled={!isValid}
+                    className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transform transition-all shadow-lg
+                        ${isValid
+                            ? 'bg-gradient-to-r from-game-primary to-blue-600 hover:from-blue-400 hover:to-blue-500 hover:scale-[1.02] active:scale-[0.98] shadow-blue-500/20'
+                            : 'bg-gray-700/50 text-gray-500 cursor-not-allowed opacity-50'
+                        }`}
                 >
                     <Play className="w-5 h-5" />
                     Generate Teams

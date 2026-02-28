@@ -34,19 +34,36 @@ describe('InputScreen', () => {
         expect(handleStartGame).toHaveBeenCalledWith(['Alice', 'Bob', 'Charlie', 'David']);
     });
 
-    it('should alert if fewer than 4 players', () => {
+    it('should disable button if fewer than 4 players', () => {
         const handleStartGame = vi.fn();
-        const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => { });
         render(<InputScreen onStartGame={handleStartGame} />);
 
         const input = screen.getByPlaceholderText(/Alice/);
         fireEvent.change(input, { target: { value: 'Alice\nBob' } });
 
         const button = screen.getByText('Generate Teams');
-        fireEvent.click(button);
+        expect(button).toBeDisabled();
 
-        expect(alertMock).toHaveBeenCalledWith('Please enter at least 4 players!');
+        fireEvent.click(button);
         expect(handleStartGame).not.toHaveBeenCalled();
-        alertMock.mockRestore();
+    });
+
+    it('should display correct player count and validation status', () => {
+        render(<InputScreen onStartGame={() => { }} />);
+
+        const input = screen.getByPlaceholderText(/Alice/);
+
+        // Initial state
+        expect(screen.getByText(/0 players entered/)).toBeInTheDocument();
+        expect(screen.getByText(/minimum 4 required/)).toBeInTheDocument();
+
+        // Update input
+        fireEvent.change(input, { target: { value: 'Alice\nBob' } });
+        expect(screen.getByText(/2 players entered/)).toBeInTheDocument();
+
+        // Valid input
+        fireEvent.change(input, { target: { value: 'Alice\nBob\nCharlie\nDavid' } });
+        expect(screen.getByText(/4 players entered/)).toBeInTheDocument();
+        expect(screen.queryByText(/minimum 4 required/)).not.toBeInTheDocument();
     });
 });
