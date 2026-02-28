@@ -34,7 +34,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
     onScore: (teamId: string) => void;
     onNoScore: () => void;
 }) {
-    const [isReading, setIsReading] = useState(true);
     const [showInfo, setShowInfo] = useState(false);
     const [showAnswer, setShowAnswer] = useState(false);
     const [showVerify, setShowVerify] = useState(false);
@@ -79,39 +78,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
         }
     };
 
-    // Effect to handle reading
-    useEffect(() => {
-        // Cancel any previous speech
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(question.text);
-        // Prevent garbage collection by keeping a reference
-        (window as any)._currentGameUtterance = utterance;
-
-        utterance.rate = 1.0; // Normal rate
-        utterance.onend = () => {
-            setIsReading(false);
-        };
-        utterance.onerror = () => {
-            setIsReading(false); // In case of error, show text
-        };
-
-        // Chrome/Safari sometimes need a slight delay after cancel
-        setTimeout(() => {
-            // Also resume in case speech synthesis was paused globally
-            window.speechSynthesis.resume();
-            window.speechSynthesis.speak(utterance);
-        }, 50);
-
-        // Cleanup on unmount or close
-        return () => {
-            window.speechSynthesis.cancel();
-        };
-    }, [question.text]);
-
-    const handleSkip = () => {
-        setIsReading(false);
-    };
 
     return (
         <motion.div
@@ -131,213 +97,188 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                 For {question.points} Points
             </div>
 
-            {isReading ? (
-                <div className="flex flex-col items-center gap-6">
-                    <div className="flex gap-2">
-                        {[0, 1, 2].map((i) => (
-                            <motion.div
-                                key={i}
-                                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                                transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
-                                className="w-4 h-4 bg-game-accent rounded-full"
-                            />
-                        ))}
-                    </div>
-                    <p className="text-2xl text-game-accent/80 font-mono animate-pulse">
-                        Reading Question...
-                    </p>
+            <div className="flex flex-col items-center gap-6 w-full max-w-3xl">
+                <motion.h2
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-4xl md:text-5xl text-center font-bold leading-tight"
+                >
+                    {question.text}
+                </motion.h2>
+
+                {/* Extra Actions Row */}
+                <div className="flex flex-wrap justify-center gap-4 mt-4">
                     <button
-                        onClick={handleSkip}
-                        className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold tracking-wider transition-colors border border-white/20"
+                        onClick={() => setShowInfo(!showInfo)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-sm font-bold transition-all"
                     >
-                        REVEAL NOW
+                        <Info className="w-4 h-4" />
+                        {showInfo ? 'Hide Info' : 'More Info'}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowVerify(!showVerify);
+                            setShowAnswer(false);
+                            setShowInfo(false);
+                        }}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                            showVerify ? "bg-purple-600 text-white" : "bg-purple-500/20 hover:bg-purple-500/30 text-purple-300"
+                        )}
+                    >
+                        <CheckCircle2 className="w-4 h-4" />
+                        {showVerify ? 'Close Verify' : 'Verify Answer'}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowAnswer(!showAnswer);
+                            setShowVerify(false);
+                        }}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                            showAnswer ? "bg-green-600 text-white" : "bg-green-500/20 hover:bg-green-500/30 text-green-300"
+                        )}
+                    >
+                        <Eye className="w-4 h-4" />
+                        {showAnswer ? 'Hide Answer' : 'Reveal Answer'}
                     </button>
                 </div>
-            ) : (
-                <div className="flex flex-col items-center gap-6 w-full max-w-3xl">
-                    <motion.h2
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-4xl md:text-5xl text-center font-bold leading-tight"
-                    >
-                        {question.text}
-                    </motion.h2>
 
-                    {/* Extra Actions Row */}
-                    <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        <button
-                            onClick={() => setShowInfo(!showInfo)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-sm font-bold transition-all"
+                {/* Revealed Content Areas */}
+                <AnimatePresence>
+                    {showInfo && question.moreInfo && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="w-full bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg text-blue-200 text-center"
                         >
-                            <Info className="w-4 h-4" />
-                            {showInfo ? 'Hide Info' : 'More Info'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setShowVerify(!showVerify);
-                                setShowAnswer(false);
-                                setShowInfo(false);
-                            }}
-                            className={cn(
-                                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                                showVerify ? "bg-purple-600 text-white" : "bg-purple-500/20 hover:bg-purple-500/30 text-purple-300"
-                            )}
+                            {question.moreInfo}
+                        </motion.div>
+                    )}
+                    {showAnswer && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-lg text-green-200 text-2xl font-bold text-center"
                         >
-                            <CheckCircle2 className="w-4 h-4" />
-                            {showVerify ? 'Close Verify' : 'Verify Answer'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setShowAnswer(!showAnswer);
-                                setShowVerify(false);
-                            }}
-                            className={cn(
-                                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                                showAnswer ? "bg-green-600 text-white" : "bg-green-500/20 hover:bg-green-500/30 text-green-300"
-                            )}
+                            {question.answer}
+                        </motion.div>
+                    )}
+                    {showVerify && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="w-full bg-gray-900 border border-purple-500/50 p-6 rounded-xl text-left"
                         >
-                            <Eye className="w-4 h-4" />
-                            {showAnswer ? 'Hide Answer' : 'Reveal Answer'}
-                        </button>
-                    </div>
+                            <h3 className="text-purple-300 font-bold mb-4 flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5" /> AI Verify
+                            </h3>
 
-                    {/* Revealed Content Areas */}
-                    <AnimatePresence>
-                        {showInfo && question.moreInfo && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="w-full bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg text-blue-200 text-center"
-                            >
-                                {question.moreInfo}
-                            </motion.div>
-                        )}
-                        {showAnswer && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-lg text-green-200 text-2xl font-bold text-center"
-                            >
-                                {question.answer}
-                            </motion.div>
-                        )}
-                        {showVerify && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="w-full bg-gray-900 border border-purple-500/50 p-6 rounded-xl text-left"
-                            >
-                                <h3 className="text-purple-300 font-bold mb-4 flex items-center gap-2">
-                                    <CheckCircle2 className="w-5 h-5" /> AI Verify
-                                </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <input
+                                        type="text"
+                                        value={userAnswer}
+                                        onChange={(e) => setUserAnswer(e.target.value)}
+                                        placeholder="Type the player's answer here..."
+                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 focus:outline-none"
+                                        disabled={isVerifying}
+                                    />
+                                </div>
 
-                                <div className="space-y-4">
-                                    <div>
+                                <div className="flex gap-4">
+                                    <div className="flex-1">
                                         <input
-                                            type="text"
-                                            value={userAnswer}
-                                            onChange={(e) => setUserAnswer(e.target.value)}
-                                            placeholder="Type the player's answer here..."
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 focus:outline-none"
+                                            type="password"
+                                            value={apiKey}
+                                            onChange={(e) => setApiKey(e.target.value)}
+                                            placeholder="Gemini API Key"
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-purple-500 focus:outline-none"
                                             disabled={isVerifying}
                                         />
                                     </div>
-
-                                    <div className="flex gap-4">
-                                        <div className="flex-1">
-                                            <input
-                                                type="password"
-                                                value={apiKey}
-                                                onChange={(e) => setApiKey(e.target.value)}
-                                                placeholder="Gemini API Key"
-                                                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-purple-500 focus:outline-none"
-                                                disabled={isVerifying}
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-2 whitespace-nowrap">
-                                            <input
-                                                type="checkbox"
-                                                id="remember-key-verify"
-                                                checked={rememberKey}
-                                                onChange={(e) => setRememberKey(e.target.checked)}
-                                                className="rounded bg-gray-700"
-                                                disabled={isVerifying}
-                                            />
-                                            <label htmlFor="remember-key-verify" className="text-xs text-gray-400">Remember Key</label>
-                                        </div>
+                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                        <input
+                                            type="checkbox"
+                                            id="remember-key-verify"
+                                            checked={rememberKey}
+                                            onChange={(e) => setRememberKey(e.target.checked)}
+                                            className="rounded bg-gray-700"
+                                            disabled={isVerifying}
+                                        />
+                                        <label htmlFor="remember-key-verify" className="text-xs text-gray-400">Remember Key</label>
                                     </div>
-
-                                    <button
-                                        onClick={handleVerifySubmit}
-                                        disabled={isVerifying || !userAnswer.trim() || !apiKey.trim()}
-                                        className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
-                                    >
-                                        {isVerifying ? 'Verifying...' : 'Submit to AI Judge'}
-                                    </button>
-
-                                    {verifyError && (
-                                        <div className="text-red-400 text-sm mt-2">{verifyError}</div>
-                                    )}
-
-                                    {verificationResult && (
-                                        <div className={cn(
-                                            "mt-4 p-4 rounded-lg border",
-                                            verificationResult.isCorrect ? "bg-green-900/30 border-green-500/50" : "bg-red-900/30 border-red-500/50"
-                                        )}>
-                                            <div className={cn(
-                                                "font-black text-xl flex items-center justify-between",
-                                                verificationResult.isCorrect ? "text-green-400" : "text-red-400"
-                                            )}>
-                                                <div className="flex items-center gap-2">
-                                                    {verificationResult.isCorrect ? <><CheckCircle2 className="w-6 h-6" /> CORRECT</> : <><X className="w-6 h-6" /> INCORRECT</>}
-                                                </div>
-                                                <button
-                                                    onClick={() => setShowExplanation(!showExplanation)}
-                                                    className="text-xs px-3 py-1 bg-black/20 hover:bg-black/40 rounded-full transition-colors font-bold uppercase text-white/70"
-                                                >
-                                                    {showExplanation ? 'Hide Explanation' : 'Why?'}
-                                                </button>
-                                            </div>
-                                            <AnimatePresence>
-                                                {showExplanation && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: 'auto' }}
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        className="overflow-hidden"
-                                                    >
-                                                        <div className="text-gray-300 text-sm mt-3 pt-3 border-t border-white/10">
-                                                            {verificationResult.explanation}
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    )}
                                 </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            )}
+
+                                <button
+                                    onClick={handleVerifySubmit}
+                                    disabled={isVerifying || !userAnswer.trim() || !apiKey.trim()}
+                                    className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {isVerifying ? 'Verifying...' : 'Submit to AI Judge'}
+                                </button>
+
+                                {verifyError && (
+                                    <div className="text-red-400 text-sm mt-2">{verifyError}</div>
+                                )}
+
+                                {verificationResult && (
+                                    <div className={cn(
+                                        "mt-4 p-4 rounded-lg border",
+                                        verificationResult.isCorrect ? "bg-green-900/30 border-green-500/50" : "bg-red-900/30 border-red-500/50"
+                                    )}>
+                                        <div className={cn(
+                                            "font-black text-xl flex items-center justify-between",
+                                            verificationResult.isCorrect ? "text-green-400" : "text-red-400"
+                                        )}>
+                                            <div className="flex items-center gap-2">
+                                                {verificationResult.isCorrect ? <><CheckCircle2 className="w-6 h-6" /> CORRECT</> : <><X className="w-6 h-6" /> INCORRECT</>}
+                                            </div>
+                                            <button
+                                                onClick={() => setShowExplanation(!showExplanation)}
+                                                className="text-xs px-3 py-1 bg-black/20 hover:bg-black/40 rounded-full transition-colors font-bold uppercase text-white/70"
+                                            >
+                                                {showExplanation ? 'Hide Explanation' : 'Why?'}
+                                            </button>
+                                        </div>
+                                        <AnimatePresence>
+                                            {showExplanation && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="text-gray-300 text-sm mt-3 pt-3 border-t border-white/10">
+                                                        {verificationResult.explanation}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             <div className="mt-8 opacity-50 text-sm mb-4">
-                {isReading ? 'Listen closely...' : 'Click a team below to award points and give them control.'}
+                Click a team below to award points and give them control.
             </div>
 
             {/* Team Scoring Buttons - Only visible when revealed */}
             <div className={cn(
                 "flex flex-wrap justify-center gap-4 w-full transition-all duration-500",
-                isReading ? "opacity-0 pointer-events-none translate-y-4" : "opacity-100 translate-y-0"
+                "opacity-100 translate-y-0"
             )}>
                 {teams.map(team => (
                     <button
                         key={team.id}
                         onClick={() => onScore(team.id)}
-                        disabled={isReading}
                         className="bg-game-surface hover:bg-game-primary border border-game-accent/30 hover:border-game-accent rounded-xl p-4 flex flex-col items-center gap-2 transition-all hover:scale-105 active:scale-95 group flex-1 min-w-[150px] max-w-[220px]"
                     >
                         <div className="font-bold text-white group-hover:text-yellow-300">
@@ -447,23 +388,13 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
                 setIsSelectingRep(true);
             }
 
-            // Play Sound / TTS
+            // Play Sound
             if (q.isDoubleJeopardy) {
                 const audio = new Audio('/sounds/double-jeopardy.mp3');
-                audio.play().catch(() => {
-                    // Fallback to TTS
-                    const u = new SpeechSynthesisUtterance("Double Jeopardy!");
-                    u.rate = 1.2;
-                    u.pitch = 1.2;
-                    window.speechSynthesis.speak(u);
-                });
+                audio.play().catch(() => { });
             } else if (q.rewardCard) {
                 const audio = new Audio('/sounds/advantage.mp3');
-                audio.play().catch(() => {
-                    // Fallback to TTS
-                    const u = new SpeechSynthesisUtterance("Advantage Card!");
-                    window.speechSynthesis.speak(u);
-                });
+                audio.play().catch(() => { });
             }
 
             onQuestionSelected(); // Notify parent to reset multiplier
