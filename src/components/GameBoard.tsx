@@ -4,7 +4,8 @@ import { RepSelectionModal } from './RepSelectionModal';
 import { RevealModal } from './RevealModal';
 import { Team, Category, Question } from '../types';
 import { cn } from '../lib/utils';
-import { X, Trophy, UserPlus, Info, Eye } from 'lucide-react';
+import { X, Trophy, UserPlus, Info, Eye, CheckCircle2 } from 'lucide-react';
+import { verifyAnswerWithAI } from '../lib/gemini';
 
 interface GameBoardProps {
     categories: Category[];
@@ -36,6 +37,47 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
     const [isReading, setIsReading] = useState(true);
     const [showInfo, setShowInfo] = useState(false);
     const [showAnswer, setShowAnswer] = useState(false);
+    const [showVerify, setShowVerify] = useState(false);
+    const [userAnswer, setUserAnswer] = useState('');
+    const [apiKey, setApiKey] = useState('');
+    const [rememberKey, setRememberKey] = useState(true);
+    const [verificationResult, setVerificationResult] = useState<{ isCorrect: boolean, explanation: string } | null>(null);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verifyError, setVerifyError] = useState<string | null>(null);
+    const [showExplanation, setShowExplanation] = useState(false);
+
+    // Load saved API key on mount
+    useEffect(() => {
+        const savedKey = localStorage.getItem('jeopardy-gemini-key');
+        if (savedKey) {
+            setApiKey(savedKey);
+            setRememberKey(true);
+        }
+    }, []);
+
+    const handleVerifySubmit = async () => {
+        if (!userAnswer.trim() || !apiKey.trim()) return;
+
+        setIsVerifying(true);
+        setVerifyError(null);
+        setVerificationResult(null);
+        setShowExplanation(false);
+
+        if (rememberKey) {
+            localStorage.setItem('jeopardy-gemini-key', apiKey.trim());
+        } else {
+            localStorage.removeItem('jeopardy-gemini-key');
+        }
+
+        try {
+            const result = await verifyAnswerWithAI(question.text, question.answer, userAnswer, apiKey.trim());
+            setVerificationResult(result);
+        } catch (err: any) {
+            setVerifyError(err.message || "Failed to verify answer.");
+        } finally {
+            setIsVerifying(false);
+        }
+    };
 
     // Effect to handle reading
     useEffect(() => {
@@ -123,8 +165,28 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                             {showInfo ? 'Hide Info' : 'More Info'}
                         </button>
                         <button
-                            onClick={() => setShowAnswer(!showAnswer)}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg text-sm font-bold transition-all"
+                            onClick={() => {
+                                setShowVerify(!showVerify);
+                                setShowAnswer(false);
+                                setShowInfo(false);
+                            }}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                                showVerify ? "bg-purple-600 text-white" : "bg-purple-500/20 hover:bg-purple-500/30 text-purple-300"
+                            )}
+                        >
+                            <CheckCircle2 className="w-4 h-4" />
+                            {showVerify ? 'Close Verify' : 'Verify Answer'}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowAnswer(!showAnswer);
+                                setShowVerify(false);
+                            }}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                                showAnswer ? "bg-green-600 text-white" : "bg-green-500/20 hover:bg-green-500/30 text-green-300"
+                            )}
                         >
                             <Eye className="w-4 h-4" />
                             {showAnswer ? 'Hide Answer' : 'Reveal Answer'}
@@ -151,6 +213,103 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                                 className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-lg text-green-200 text-2xl font-bold text-center"
                             >
                                 {question.answer}
+                            </motion.div>
+                        )}
+                        {showVerify && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="w-full bg-gray-900 border border-purple-500/50 p-6 rounded-xl text-left"
+                            >
+                                <h3 className="text-purple-300 font-bold mb-4 flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5" /> AI Verify
+                                </h3>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <input
+                                            type="text"
+                                            value={userAnswer}
+                                            onChange={(e) => setUserAnswer(e.target.value)}
+                                            placeholder="Type the player's answer here..."
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-purple-500 focus:outline-none"
+                                            disabled={isVerifying}
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <input
+                                                type="password"
+                                                value={apiKey}
+                                                onChange={(e) => setApiKey(e.target.value)}
+                                                placeholder="Gemini API Key"
+                                                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                                                disabled={isVerifying}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 whitespace-nowrap">
+                                            <input
+                                                type="checkbox"
+                                                id="remember-key-verify"
+                                                checked={rememberKey}
+                                                onChange={(e) => setRememberKey(e.target.checked)}
+                                                className="rounded bg-gray-700"
+                                                disabled={isVerifying}
+                                            />
+                                            <label htmlFor="remember-key-verify" className="text-xs text-gray-400">Remember Key</label>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleVerifySubmit}
+                                        disabled={isVerifying || !userAnswer.trim() || !apiKey.trim()}
+                                        className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                                    >
+                                        {isVerifying ? 'Verifying...' : 'Submit to AI Judge'}
+                                    </button>
+
+                                    {verifyError && (
+                                        <div className="text-red-400 text-sm mt-2">{verifyError}</div>
+                                    )}
+
+                                    {verificationResult && (
+                                        <div className={cn(
+                                            "mt-4 p-4 rounded-lg border",
+                                            verificationResult.isCorrect ? "bg-green-900/30 border-green-500/50" : "bg-red-900/30 border-red-500/50"
+                                        )}>
+                                            <div className={cn(
+                                                "font-black text-xl flex items-center justify-between",
+                                                verificationResult.isCorrect ? "text-green-400" : "text-red-400"
+                                            )}>
+                                                <div className="flex items-center gap-2">
+                                                    {verificationResult.isCorrect ? <><CheckCircle2 className="w-6 h-6" /> CORRECT</> : <><X className="w-6 h-6" /> INCORRECT</>}
+                                                </div>
+                                                <button
+                                                    onClick={() => setShowExplanation(!showExplanation)}
+                                                    className="text-xs px-3 py-1 bg-black/20 hover:bg-black/40 rounded-full transition-colors font-bold uppercase text-white/70"
+                                                >
+                                                    {showExplanation ? 'Hide Explanation' : 'Why?'}
+                                                </button>
+                                            </div>
+                                            <AnimatePresence>
+                                                {showExplanation && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="text-gray-300 text-sm mt-3 pt-3 border-t border-white/10">
+                                                            {verificationResult.explanation}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>

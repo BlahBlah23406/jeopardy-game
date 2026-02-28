@@ -1,6 +1,6 @@
-
 import { useState, useRef } from 'react';
 import { Category, Question } from '../types';
+import { AIGenerationModal } from './AIGenerationModal';
 
 interface QuestionSetupScreenProps {
     onComplete: (categories: Category[], finalJeopardyQuestions: Question[]) => void;
@@ -40,6 +40,13 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
             isAnswered: false
         }
     ]);
+
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+
+    const handleAIGenerated = (newCategories: Category[], newFinalJeopardyQuestions: Question[]) => {
+        setCategories(newCategories);
+        setFinalJeopardyQuestions(newFinalJeopardyQuestions);
+    };
 
     const handleAddCategory = () => {
         if (categories.length >= 6) return;
@@ -170,8 +177,8 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
                     <p className="text-blue-300">Create your categories and questions.</p>
                 </div>
 
-                {/* Import/Export Controls */}
-                <div className="flex gap-4 justify-center">
+                {/* Import/Export/AI Controls */}
+                <div className="flex gap-4 justify-center flex-wrap">
                     <button
                         onClick={handleExport}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold shadow-lg transition-all"
@@ -179,6 +186,15 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Export Data
                     </button>
+
+                    <button
+                        onClick={() => setIsAIModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all border border-purple-400 transform hover:scale-105"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        AI Generate
+                    </button>
+
                     <button
                         onClick={handleImportClick}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-bold shadow-lg transition-all border border-gray-500"
@@ -253,8 +269,8 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
                     onClick={handleAddCategory}
                     disabled={categories.length >= 6}
                     className={`w-full py-4 border-2 border-dashed border-gray-600 text-gray-400 rounded-xl transition-colors font-bold uppercase tracking-widest ${categories.length >= 6
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:border-blue-500 hover:text-blue-400'
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:border-blue-500 hover:text-blue-400'
                         }`}
                 >
                     {categories.length >= 6 ? 'Category Limit Reached (Max 6)' : '+ Add Category'}
@@ -320,6 +336,12 @@ export function QuestionSetupScreen({ onComplete }: QuestionSetupScreenProps) {
                     Continue to Players
                 </button>
             </div>
+
+            <AIGenerationModal
+                isOpen={isAIModalOpen}
+                onClose={() => setIsAIModalOpen(false)}
+                onGenerate={handleAIGenerated}
+            />
         </div>
     );
 }
