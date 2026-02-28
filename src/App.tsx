@@ -174,23 +174,21 @@ function App() {
         setPlayerAddedInfo({ playerName: name, teamName: targetTeam.name });
     };
 
-    const handleActivateCard = (teamId: string, card: AdvantageCard) => {
-        const team = teams.find(t => t.id === teamId);
-        if (!team) return;
-
+    const handleActivateCard = useCallback((team: Team, card: AdvantageCard) => {
         // Apply Effect
         if (card.type === 'DOUBLE_POINTS') {
             setPointsMultiplier(2);
         } else if (card.type === 'STEAL_SELECTION') {
-            setActiveTeamId(teamId);
+            setActiveTeamId(team.id);
         } else if (card.type === 'RESET_REP') {
-            handleUpdateTeam(teamId, { playedPlayerIds: [] });
+            handleUpdateTeam(team.id, { playedPlayerIds: [] });
         }
 
         // Remove card from inventory
-        const newInventory = team.inventory.filter(c => c.id !== card.id);
-        handleUpdateTeam(teamId, { inventory: newInventory });
-    };
+        // ⚡ Bolt Optimization: Use passed team object to avoid 'teams' dependency and prevent function recreation
+        const newInventory = (team.inventory || []).filter(c => c.id !== card.id);
+        handleUpdateTeam(team.id, { inventory: newInventory });
+    }, [handleUpdateTeam]);
 
     const handleQuestionAnswered = useCallback((questionId: string) => {
         setCategories(prev => prev.map(cat => {
