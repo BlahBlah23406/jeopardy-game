@@ -16,6 +16,7 @@ export function AIGenerationModal({ isOpen, onClose, onGenerate }: AIGenerationM
     const [rememberKey, setRememberKey] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
     // Load saved API key on mount
     useEffect(() => {
@@ -24,6 +25,9 @@ export function AIGenerationModal({ isOpen, onClose, onGenerate }: AIGenerationM
             if (savedKey) {
                 setApiKey(savedKey);
                 setRememberKey(true);
+                setShowApiKeyInput(false);
+            } else {
+                setShowApiKeyInput(true);
             }
         }
     }, [isOpen]);
@@ -73,28 +77,46 @@ export function AIGenerationModal({ isOpen, onClose, onGenerate }: AIGenerationM
 
                 <div className="space-y-4 mb-6">
                     <div>
-                        <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide">Gemini API Key</label>
-                        <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="Enter your Gemini API Key..."
-                            className="w-full bg-gray-800 border-2 border-gray-700 hover:border-gray-600 rounded-xl p-3 text-white focus:border-purple-500 focus:outline-none font-mono shadow-inner transition-colors"
-                            disabled={isGenerating}
-                        />
-                        <div className="flex items-center mt-3 gap-2">
-                            <input
-                                type="checkbox"
-                                id="remember-key"
-                                checked={rememberKey}
-                                onChange={(e) => setRememberKey(e.target.checked)}
-                                className="w-4 h-4 rounded border-gray-600 text-purple-600 focus:ring-purple-500 bg-gray-700 accent-purple-500"
-                                disabled={isGenerating}
-                            />
-                            <label htmlFor="remember-key" className="text-sm text-gray-400 cursor-pointer select-none">
-                                Remember API Key on this device
-                            </label>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-bold text-gray-400 uppercase tracking-wide">Gemini API Key</label>
+                            {!showApiKeyInput && (
+                                <button
+                                    onClick={() => setShowApiKeyInput(true)}
+                                    className="text-xs text-purple-400 hover:text-purple-300 underline font-bold"
+                                >
+                                    Change Key
+                                </button>
+                            )}
                         </div>
+                        {showApiKeyInput ? (
+                            <>
+                                <input
+                                    type="password"
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    placeholder="Enter your Gemini API Key..."
+                                    className="w-full bg-gray-800 border-2 border-gray-700 hover:border-gray-600 rounded-xl p-3 text-white focus:border-purple-500 focus:outline-none font-mono shadow-inner transition-colors"
+                                    disabled={isGenerating}
+                                />
+                                <div className="flex items-center mt-3 gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="remember-key"
+                                        checked={rememberKey}
+                                        onChange={(e) => setRememberKey(e.target.checked)}
+                                        className="w-4 h-4 rounded border-gray-600 text-purple-600 focus:ring-purple-500 bg-gray-700 accent-purple-500"
+                                        disabled={isGenerating}
+                                    />
+                                    <label htmlFor="remember-key" className="text-sm text-gray-400 cursor-pointer select-none">
+                                        Remember API Key on this device
+                                    </label>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-sm text-purple-300 bg-purple-900/20 p-3 rounded-xl border border-purple-500/30">
+                                Using saved Gemini API Key.
+                            </div>
+                        )}
                     </div>
                 </div>
 

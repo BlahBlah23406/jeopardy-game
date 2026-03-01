@@ -44,6 +44,7 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
     const [isVerifying, setIsVerifying] = useState(false);
     const [verifyError, setVerifyError] = useState<string | null>(null);
     const [showExplanation, setShowExplanation] = useState(false);
+    const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
     // Load saved API key on mount
     useEffect(() => {
@@ -51,6 +52,9 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
         if (savedKey) {
             setApiKey(savedKey);
             setRememberKey(true);
+            setShowApiKeyInput(false);
+        } else {
+            setShowApiKeyInput(true);
         }
     }, []);
 
@@ -189,29 +193,41 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                                     />
                                 </div>
 
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="password"
-                                            value={apiKey}
-                                            onChange={(e) => setApiKey(e.target.value)}
-                                            placeholder="Gemini API Key"
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-purple-500 focus:outline-none"
-                                            disabled={isVerifying}
-                                        />
+                                {showApiKeyInput ? (
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <input
+                                                type="password"
+                                                value={apiKey}
+                                                onChange={(e) => setApiKey(e.target.value)}
+                                                placeholder="Gemini API Key"
+                                                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                                                disabled={isVerifying}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 whitespace-nowrap">
+                                            <input
+                                                type="checkbox"
+                                                id="remember-key-verify"
+                                                checked={rememberKey}
+                                                onChange={(e) => setRememberKey(e.target.checked)}
+                                                className="rounded bg-gray-700"
+                                                disabled={isVerifying}
+                                            />
+                                            <label htmlFor="remember-key-verify" className="text-xs text-gray-400">Remember Key</label>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 whitespace-nowrap">
-                                        <input
-                                            type="checkbox"
-                                            id="remember-key-verify"
-                                            checked={rememberKey}
-                                            onChange={(e) => setRememberKey(e.target.checked)}
-                                            className="rounded bg-gray-700"
-                                            disabled={isVerifying}
-                                        />
-                                        <label htmlFor="remember-key-verify" className="text-xs text-gray-400">Remember Key</label>
+                                ) : (
+                                    <div className="flex justify-between items-center bg-gray-800/50 p-2 rounded-lg border border-gray-700">
+                                        <span className="text-sm text-gray-400">Using saved API Key</span>
+                                        <button
+                                            onClick={() => setShowApiKeyInput(true)}
+                                            className="text-xs text-purple-400 hover:text-purple-300 underline font-bold"
+                                        >
+                                            Change Key
+                                        </button>
                                     </div>
-                                </div>
+                                )}
 
                                 <button
                                     onClick={handleVerifySubmit}
