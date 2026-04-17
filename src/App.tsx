@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GamePhase, Player, Team, Category, AdvantageCard, Question } from './types';
+import { shuffle } from './lib/utils';
 import { InputScreen } from './components/InputScreen';
 import { TeamAssignment } from './components/TeamAssignment';
 import { GameBoard } from './components/GameBoard';
@@ -65,12 +66,13 @@ function App() {
     };
 
     const handleStartGame = (playerNames: string[]) => {
+        // ⚡ Bolt Optimization: Use O(N) Fisher-Yates shuffle instead of O(N log N) sort with Math.random()
         // 1. Shuffle players
-        const shuffled = [...playerNames].sort(() => Math.random() - 0.5);
+        const shuffled = shuffle(playerNames);
 
         // 2. Create players objects
         const players: Player[] = shuffled.map(name => ({
-            id: Math.random().toString(36).substr(2, 9),
+            id: crypto.randomUUID(),
             name
         }));
 
@@ -152,17 +154,14 @@ function App() {
     }, []);
 
     const handleAddPlayer = (name: string) => {
+        // ⚡ Bolt Optimization: Use O(N) reduce combined with shuffle for unbiased tie-breaking instead of O(N log N) sort
         // Find smallest team
-        const sortedTeams = [...teams].sort((a, b) => {
-            if (a.players.length !== b.players.length) {
-                return a.players.length - b.players.length;
-            }
-            return Math.random() - 0.5;
+        const targetTeam = shuffle([...teams]).reduce((smallest, current) => {
+            return current.players.length < smallest.players.length ? current : smallest;
         });
 
-        const targetTeam = sortedTeams[0];
         const newPlayer: Player = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: crypto.randomUUID(),
             name
         };
 
@@ -223,9 +222,9 @@ function App() {
     // --- Final Jeopardy Logic ---
 
     const handleTransitionToDrafting = () => {
+        // ⚡ Bolt Optimization: Use O(N) reduce instead of O(N log N) sort to find the winner
         // 1. Identify Winning Team
-        const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
-        const winner = sortedTeams[0]; // Logic for ties? Assume first for now.
+        const winner = teams.reduce((max, team) => (team.score > max.score ? team : max), teams[0]); // Logic for ties? Assume first for now.
 
         // 2. Disband Winning Team -> make them Captains
         const captains = winner.players.map(p => ({ ...p })); // Clone
@@ -249,8 +248,9 @@ function App() {
         }));
 
         // 5. Randomize Selection Order
+        // ⚡ Bolt Optimization: Use O(N) Fisher-Yates shuffle instead of O(N log N) sort
         const captainIds = newTeams.map(t => t.id);
-        const shuffledOrder = [...captainIds].sort(() => Math.random() - 0.5);
+        const shuffledOrder = shuffle(captainIds);
 
         setTeams(newTeams);
         setDraftingPool(pool);
