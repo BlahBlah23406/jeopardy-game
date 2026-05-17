@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Team, Question } from '../types';
 
@@ -21,8 +21,15 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
     // So if biggest team has 4 members -> 3 rounds.
     // If Tie -> Tie Breaker Question (Index 6 in our list of 7)
 
-    const maxTeamSize = Math.max(...teams.map(t => t.players.length));
-    const totalRounds = Math.max(1, maxTeamSize - 1);
+    // ⚡ Bolt Optimization: Memoize total rounds calculation to prevent O(N) array iteration on every render,
+    // which happens frequently during the player selection phase.
+    const { maxTeamSize, totalRounds } = useMemo(() => {
+        const max = Math.max(...teams.map(t => t.players.length));
+        return {
+            maxTeamSize: max,
+            totalRounds: Math.max(1, max - 1)
+        };
+    }, [teams]);
 
     // Derived state for current active question
     const currentQuestion = questions[currentQuestionIndex];

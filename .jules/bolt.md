@@ -1,0 +1,3 @@
+## 2024-03-24 - Memoize O(N) array calculations in React Render methods
+**Learning:** In highly interactive React components (like `FinalJeopardyGame.tsx`), state variables often update rapidly (e.g. tracking `teamSelections` for each click). Direct calculations mapping and calculating max on an array prop (`teams`) using `Math.max(...teams.map(t => ...))` execute on *every* render. Although arrays are typically small, this leads to unnecessary main-thread work.
+**Action:** Always wrap array-based max, min, or reduction derived state in `useMemo` when dependent on stable props (like `teams`), keeping hot-path interactive state (like `teamSelections`) separate from the calculation dependency array.
