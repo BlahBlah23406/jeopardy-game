@@ -15,7 +15,6 @@ interface ScoreBoardProps {
     onActivateCard: (team: Team, card: AdvantageCard) => void;
 }
 
-// ⚡ Bolt Optimization: Memoize TeamScoreCard to prevent re-renders of all cards when one team updates
 const TeamScoreCard = memo(({ team, isActive, onSetActiveTeam, onActivateCard, onManage }: {
     team: Team,
     isActive: boolean,
@@ -39,7 +38,6 @@ const TeamScoreCard = memo(({ team, isActive, onSetActiveTeam, onActivateCard, o
                         : "bg-game-surface/50 border-gray-700 hover:bg-game-surface"
                 )}
             >
-                {/* Active Indicator */}
                 {isActive && (
                     <div className="absolute top-0 left-0 right-0 h-1 bg-game-accent shadow-[0_0_10px_#f59e0b]" />
                 )}
@@ -66,10 +64,9 @@ const TeamScoreCard = memo(({ team, isActive, onSetActiveTeam, onActivateCard, o
                         {team.score.toLocaleString()}
                     </div>
 
-                    {/* Inventory */}
                     <div className="w-full flex justify-center mb-1">
                         <InventoryDisplay
-                            inventory={team.inventory || []} // Handle undefined inventory
+                            inventory={team.inventory || []}
                             onActivate={(card) => onActivateCard(team, card)}
                             canActivate={true}
                         />
@@ -83,7 +80,6 @@ const TeamScoreCard = memo(({ team, isActive, onSetActiveTeam, onActivateCard, o
                 </div>
             </motion.div>
 
-            {/* Settings Button */}
             <button
                 onClick={(e) => {
                     e.stopPropagation();

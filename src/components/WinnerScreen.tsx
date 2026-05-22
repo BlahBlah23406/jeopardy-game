@@ -1,14 +1,8 @@
-// Simple confetti effect using CSS particles or just a nice overlay
-// For a "wow" factor, we can try to use a canvas or just heavy CSS animations.
-
 interface WinnerScreenProps {
     winnerName: string;
 }
 
 export function WinnerScreen({ winnerName }: WinnerScreenProps) {
-
-    // Auto-fire confetti on mount?
-    // We'll stick to CSS-only for simplicity and performance without external libs.
 
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden">

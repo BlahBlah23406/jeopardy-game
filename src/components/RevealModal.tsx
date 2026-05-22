@@ -39,10 +39,9 @@ export function RevealModal({ type, onClose }: RevealModalProps) {
     const info = INFO[type];
 
     useEffect(() => {
-        // Placeholder for sound effect
-        const audio = new Audio('/reveal-sound.mp3'); // We don't have this, but logic is here
+        const audio = new Audio('/reveal-sound.mp3');
         audio.volume = 0.5;
-        audio.play().catch(() => { }); // Ignore errors if file missing
+        audio.play().catch(() => { });
     }, []);
 
     return (

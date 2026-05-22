@@ -110,7 +110,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                     {question.text}
                 </motion.h2>
 
-                {/* Extra Actions Row */}
                 <div className="flex flex-wrap justify-center gap-4 mt-4">
                     <button
                         onClick={() => setShowInfo(!showInfo)}
@@ -148,7 +147,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                     </button>
                 </div>
 
-                {/* Revealed Content Areas */}
                 <AnimatePresence>
                     {showInfo && question.moreInfo && (
                         <motion.div
@@ -286,7 +284,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                 Click a team below to award points and give them control.
             </div>
 
-            {/* Team Scoring Buttons - Only visible when revealed */}
             <div className={cn(
                 "flex flex-wrap justify-center gap-4 w-full transition-all duration-500",
                 "opacity-100 translate-y-0"
@@ -307,7 +304,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
                     </button>
                 ))}
 
-                {/* No Points Option */}
                 <button
                     onClick={onNoScore}
                     className="bg-gray-800/50 hover:bg-gray-700/80 border border-gray-600 hover:border-gray-400 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 flex-1 min-w-[150px] max-w-[220px]"
@@ -320,7 +316,6 @@ function QuestionModalContent({ question, teams, onClose, onScore, onNoScore }: 
     );
 }
 
-// Memoized Column Component
 const CategoryColumn = memo(({ category, onQuestionClick, isCategoryRevealed }: {
     category: Category,
     onQuestionClick: (q: Question) => void,
@@ -328,14 +323,12 @@ const CategoryColumn = memo(({ category, onQuestionClick, isCategoryRevealed }: 
 }) => {
     return (
         <div className="flex flex-col gap-4 h-full">
-            {/* Header */}
             <div className="bg-game-primary/80 text-center py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center h-24 border border-blue-400/30">
                 <span className="line-clamp-2 px-2 uppercase tracking-wider text-shadow transition-all duration-500">
                     {isCategoryRevealed ? category.title : "???"}
                 </span>
             </div>
 
-            {/* Questions */}
             <div className="flex-1 flex flex-col gap-4">
                 {category.questions.map((q) => (
                     <motion.button
@@ -344,20 +337,18 @@ const CategoryColumn = memo(({ category, onQuestionClick, isCategoryRevealed }: 
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={cn(
-                            "flex-1 rounded-lg font-bold text-2xl shadow-md transition-all flex items-center justify-center relative overflow-hidden",
-                            q.isAnswered
-                                ? "bg-gray-900/80 text-gray-600 border border-gray-800"
-                                : "bg-game-surface text-game-accent hover:bg-game-surface/80 hover:text-yellow-300 border border-game-accent/20 hover:border-game-accent"
+                             "flex-1 rounded-lg font-bold text-2xl shadow-md transition-all flex items-center justify-center relative overflow-hidden",
+                             q.isAnswered
+                                 ? "bg-gray-900/80 text-gray-600 border border-gray-800"
+                                 : "bg-game-surface text-game-accent hover:bg-game-surface/80 hover:text-yellow-300 border border-game-accent/20 hover:border-game-accent"
                         )}
                     >
-                        {/* HIDDEN Revealed Indicators - Only show when answered (history) */}
                         {q.isDoubleJeopardy && q.isAnswered && (
                             <div className="absolute top-1 right-1 text-[8px] uppercase tracking-widest font-black text-yellow-300 opacity-70">
                                 2x
                             </div>
                         )}
 
-                        {/* Show Advantage indicator only after answered */}
                         {q.rewardCard && q.isAnswered && (
                             <div className="absolute top-1 left-1 text-[8px] uppercase tracking-widest font-black text-blue-300 opacity-70">
                                 ★
@@ -381,30 +372,23 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
     const [isSelectingRep, setIsSelectingRep] = useState(false);
     const [revealType, setRevealType] = useState<'DOUBLE_JEOPARDY' | import('../types').AdvantageCardType | null>(null);
 
-    // Removed handleAddPlayer
-
     const handleQuestionClick = useCallback((q: Question) => {
         if (!q.isAnswered) {
-            // Calculate Points Logic
             let points = q.points;
             if (q.isDoubleJeopardy) points *= 2;
             points *= pointsMultiplier;
 
             const effectiveQuestion = { ...q, points };
-
             setPendingQuestion(effectiveQuestion);
 
-            // Check for hidden reveals
             if (q.isDoubleJeopardy) {
                 setRevealType('DOUBLE_JEOPARDY');
             } else if (q.rewardCard) {
                 setRevealType(q.rewardCard);
             } else {
-                // Normal flow
                 setIsSelectingRep(true);
             }
 
-            // Play Sound
             if (q.isDoubleJeopardy) {
                 const audio = new Audio('/sounds/double-jeopardy.mp3');
                 audio.play().catch(() => { });
@@ -413,33 +397,24 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
                 audio.play().catch(() => { });
             }
 
-            onQuestionSelected(); // Notify parent to reset multiplier
+            onQuestionSelected();
         }
     }, [pointsMultiplier, onQuestionSelected]);
 
     const handleRevealClose = () => {
         setRevealType(null);
-        setIsSelectingRep(true); // Proceed to selection after reveal
+        setIsSelectingRep(true);
     };
 
     const handleRepSelectionConfirm = (selections: { [teamId: string]: string }) => {
-        // Update each team with their assigned rep
         Object.entries(selections).forEach(([teamId, playerId]) => {
             const team = teams.find(t => t.id === teamId);
             if (team) {
-                // Logic: If list was full, reset it, then add new one? 
-                // Our modal logic handles the "reset" display, but persistent state needs clear logic.
-                // Simplified: Just APPEND. If it becomes length+1, we might need cleanup elsewhere or just rely on length check.
-                // Actually, the modal logic `getAvailablePlayers` checked `length === length`.
-                // So if we just append, the list grows forever? NO.
-                // We should clear the list if it was full, then add.
-
                 let newPlayedIds = [...team.playedPlayerIds];
                 if (newPlayedIds.length >= team.players.length) {
-                    newPlayedIds = []; // Reset cycle
+                    newPlayedIds = [];
                 }
                 newPlayedIds.push(playerId);
-
                 onUpdateTeam(teamId, { playedPlayerIds: newPlayedIds });
             }
         });
@@ -456,11 +431,9 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
         if (team) {
             const updates: Partial<Team> = { score: team.score + activeQuestion.points };
 
-            // Check for reward card
             if (activeQuestion.rewardCard) {
                 const newCard = createAdvantageCard(activeQuestion.rewardCard);
                 updates.inventory = [...(team.inventory || []), newCard];
-                // Should we show a notification? For now, the inventory update is visible in scoreboard.
             }
 
             onUpdateTeam(teamId, updates);
@@ -478,7 +451,6 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
 
     return (
         <div className="w-full max-w-7xl mx-auto p-4 flex flex-col h-[65vh] relative mb-48 mt-16">
-            {/* Header / Controls */}
             <div className="absolute -top-16 right-4 z-20">
                 <button
                     onClick={onAddPlayerRequest}
@@ -489,10 +461,8 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
                 </button>
             </div>
 
-            {/* Grid */}
             <div className="grid grid-cols-6 gap-4 h-full">
                 {categories.map((category) => {
-                    // Check if category should be revealed
                     const isRevealed = category.questions.some(q => q.isAnswered) || (activeQuestion?.id.startsWith(category.id));
 
                     return (
@@ -506,7 +476,6 @@ export function GameBoard({ categories, teams, onUpdateTeam, onSetActiveTeam, on
                 })}
             </div>
 
-            {/* Question Modal */}
             <AnimatePresence>
                 {activeQuestion && (
                     <motion.div

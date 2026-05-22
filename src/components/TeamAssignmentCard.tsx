@@ -10,10 +10,6 @@ interface TeamAssignmentCardProps {
     onMovePlayerRequest: (player: Player, teamId: string) => void;
 }
 
-// ⚡ Bolt Optimization:
-// This component is memoized to prevent re-renders of the entire team list
-// when a single team's state changes (e.g., typing in the team name input).
-// This ensures that only the modified card re-renders, improving input responsiveness.
 export const TeamAssignmentCard = memo(({ team, index, onUpdateTeam, onMovePlayerRequest }: TeamAssignmentCardProps) => {
     return (
         <motion.div

@@ -24,29 +24,16 @@ function App() {
     const [notification, setNotification] = useState<string | null>(null);
     const [playerAddedInfo, setPlayerAddedInfo] = useState<{ playerName: string; teamName: string } | null>(null);
 
-    // Final Jeopardy State
     const [draftingPool, setDraftingPool] = useState<Player[]>([]);
-    const [draftingOrder, setDraftingOrder] = useState<string[]>([]); // Team IDs
+    const [draftingOrder, setDraftingOrder] = useState<string[]>([]);
     const [currentDrafterIndex, setCurrentDrafterIndex] = useState(0);
     const [finalJeopardyQuestions, setFinalJeopardyQuestions] = useState<Question[]>([]);
     const [winningTeamId, setWinningTeamId] = useState<string | null>(null);
 
-    // Custom Data from Setup
     const [_customCategories, setCustomCategories] = useState<Category[]>([]);
     const [customFinalJeopardyQuestions, setCustomFinalJeopardyQuestions] = useState<Question[]>([]);
 
-    // Initialize Game Data
-    // We only generate data when transitioning from Setup -> Input (or on Setup complete)
-    // useEffect(() => {
-    //     setCategories(generateGameData());
-    // }, []);
-
-    // Clear notification after 3 seconds
     useEffect(() => {
-        if (notification) {
-            const timer = setTimeout(() => setNotification(null), 3000);
-            return () => clearTimeout(timer);
-        }
         if (notification) {
             const timer = setTimeout(() => setNotification(null), 3000);
             return () => clearTimeout(timer);
@@ -57,7 +44,6 @@ function App() {
         setCustomCategories(categories);
         setCustomFinalJeopardyQuestions(fjQuestions);
 
-        // Generate Game Data using custom inputs (or defaults if empty)
         const gameData = generateGameData(categories);
         setCategories(gameData);
 
@@ -65,18 +51,14 @@ function App() {
     };
 
     const handleStartGame = (playerNames: string[]) => {
-        // 1. Shuffle players
         const shuffled = [...playerNames].sort(() => Math.random() - 0.5);
 
-        // 2. Create players objects
         const players: Player[] = shuffled.map(name => ({
             id: Math.random().toString(36).substr(2, 9),
             name
         }));
 
-        // 3. Determine Number of Teams (Square Heuristic)
-        // Try to make Teams ~= Players Per Team => Teams = sqrt(Total Players)
-        // Minimum 2 teams
+        // Dynamically assign team count (minimum 2, max 4) based on square root of player count
         const totalPlayers = players.length;
         const optimalTeamCount = Math.min(4, Math.max(2, Math.round(Math.sqrt(totalPlayers))));
 
@@ -86,7 +68,6 @@ function App() {
             'Team Iota', 'Team Kappa', 'Team Lambda', 'Team Mu'
         ];
 
-        // 4. Create Teams
         const newTeams: Team[] = [];
         for (let i = 0; i < optimalTeamCount; i++) {
             const name = teamNames[i] || `Team ${i + 1}`;
@@ -100,7 +81,7 @@ function App() {
             });
         }
 
-        // 5. Distribute players
+        // Distribute players evenly among teams
         players.forEach((player, index) => {
             newTeams[index % optimalTeamCount].players.push(player);
         });
@@ -123,27 +104,12 @@ function App() {
         setTeams(prev => prev.map(team => {
             if (team.id !== teamId) return team;
 
-            // Inventory Limit Logic check
-            // If we are updating inventory, check length
+            // Enforce limit of 2 inventory cards
             let finalUpdates = { ...updates };
             if (updates.inventory && updates.inventory.length > 2) {
-                // If trying to add beyond 2, keep only first 2 or burn the new one?
-                // Logic: "Limit to two cards in inventory at once"
-                // Usually means you can't pick up the new one.
-                // Since this update usually comes from "adding a card", we should check existing.
-                // However, updates.inventory is the *new* full list.
-                // Creating a new card logic was: [...current, new]
-                // So if new length > 2, we just take the first 2 (effectively burning the new one if appended at end, 
-                // or we should alert).
-
-                // Let's notify if we are burning
                 if (team.inventory.length >= 2 && updates.inventory.length > team.inventory.length) {
                     setNotification(`Inventory Full! ${team.name} cannot hold more than 2 cards!`);
-                    finalUpdates.inventory = team.inventory; // Revert to old inventory
-
-                    // Optional: Play error sound
-                    // const audio = new Audio('/sounds/error.mp3');
-                    // audio.play().catch(() => {});
+                    finalUpdates.inventory = team.inventory;
                 }
             }
 
@@ -152,7 +118,6 @@ function App() {
     }, []);
 
     const handleAddPlayer = (name: string) => {
-        // Find smallest team
         const sortedTeams = [...teams].sort((a, b) => {
             if (a.players.length !== b.players.length) {
                 return a.players.length - b.players.length;
@@ -170,12 +135,10 @@ function App() {
             players: [...targetTeam.players, newPlayer]
         });
 
-        // Show Modal instead of Toast for player add
         setPlayerAddedInfo({ playerName: name, teamName: targetTeam.name });
     };
 
     const handleActivateCard = useCallback((team: Team, card: AdvantageCard) => {
-        // Apply Effect
         if (card.type === 'DOUBLE_POINTS') {
             setPointsMultiplier(2);
         } else if (card.type === 'STEAL_SELECTION') {
@@ -184,16 +147,12 @@ function App() {
             handleUpdateTeam(team.id, { playedPlayerIds: [] });
         }
 
-        // Remove card from inventory
-        // ⚡ Bolt Optimization: Use passed team object to avoid 'teams' dependency and prevent function recreation
         const newInventory = (team.inventory || []).filter(c => c.id !== card.id);
         handleUpdateTeam(team.id, { inventory: newInventory });
     }, [handleUpdateTeam]);
 
     const handleQuestionAnswered = useCallback((questionId: string) => {
         setCategories(prev => prev.map(cat => {
-            // OPTIMIZATION: Check if this category contains the question.
-            // If not, return the existing category reference to prevent unnecessary re-renders.
             const hasQuestion = cat.questions.some(q => q.id === questionId);
             if (!hasQuestion) return cat;
 
@@ -223,14 +182,11 @@ function App() {
     // --- Final Jeopardy Logic ---
 
     const handleTransitionToDrafting = () => {
-        // 1. Identify Winning Team
         const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
-        const winner = sortedTeams[0]; // Logic for ties? Assume first for now.
+        const winner = sortedTeams[0];
 
-        // 2. Disband Winning Team -> make them Captains
-        const captains = winner.players.map(p => ({ ...p })); // Clone
+        const captains = winner.players.map(p => ({ ...p }));
 
-        // 3. Everyone else -> Drafting Pool
         const pool: Player[] = [];
         teams.forEach(t => {
             if (t.id !== winner.id) {
@@ -238,17 +194,15 @@ function App() {
             }
         });
 
-        // 4. Create new Teams for Captains
         const newTeams: Team[] = captains.map((captain) => ({
             id: `fj-team-${captain.id}`,
             name: captain.name,
-            players: [captain], // Captain starts in team
+            players: [captain],
             score: 0,
             playedPlayerIds: [],
             inventory: []
         }));
 
-        // 5. Randomize Selection Order
         const captainIds = newTeams.map(t => t.id);
         const shuffledOrder = [...captainIds].sort(() => Math.random() - 0.5);
 
@@ -263,22 +217,19 @@ function App() {
     const handleDraftPick = (player: Player) => {
         const currentTeamId = draftingOrder[currentDrafterIndex];
 
-        // Add player to team
         setTeams(prev => prev.map(t =>
             t.id === currentTeamId
                 ? { ...t, players: [...t.players, player] }
                 : t
         ));
 
-        // Remove from pool
         const newPool = draftingPool.filter(p => p.id !== player.id);
         setDraftingPool(newPool);
 
-        // Advance turn (Round Robin)
+        // Advance to next drafter using round-robin distribution
         const nextIndex = (currentDrafterIndex + 1) % draftingOrder.length;
         setCurrentDrafterIndex(nextIndex);
 
-        // Check if done
         if (newPool.length === 0) {
             handleTransitionToFinalJeopardy();
         }
@@ -296,10 +247,8 @@ function App() {
 
     return (
         <div className="min-h-screen bg-game-dark text-white p-4 overflow-hidden relative font-sans">
-            {/* Background Pattern */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-4.0.3&auto=format&fit=crop&w=2342&q=80')] bg-cover bg-center opacity-10 pointer-events-none" />
 
-            {/* Active Effect Indicator */}
             {pointsMultiplier > 1 && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-500 text-black font-black px-6 py-2 rounded-full shadow-lg border-2 border-white animate-pulse">
                     DOUBLE POINTS ACTIVE!
@@ -350,7 +299,6 @@ function App() {
                             onQuestionSelected={handleQuestionSelected}
                             onQuestionAnswered={handleQuestionAnswered}
                         />
-                        {/* Dev Button to Force End Game */}
                         <button
                             onClick={() => setPhase('FINAL_JEOPARDY_RULES')}
                             className="fixed bottom-4 right-4 text-sm opacity-100 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg shadow-xl z-50 border-2 border-white font-bold"

@@ -11,18 +11,9 @@ interface RepSelectionModalProps {
 }
 
 export function RepSelectionModal({ teams, onConfirm }: RepSelectionModalProps) {
-    // Local state to track selected player ID for each team
     const [selections, setSelections] = useState<{ [teamId: string]: string }>({});
 
-    // Helper to determine available players for a specific team
     const getAvailablePlayers = (team: Team): Player[] => {
-        // If everyone has played, reset is implied for this turn (all available)
-        // OR we can explicitly handle the reset logic in the confirm handler.
-        // For UI: if playedPlayerIds.length === players.length, show all players BUT
-        // conceptually this means a new cycle starts.
-
-        // Simpler logic: Logic will be enforced here.
-        // If all players have played, they are ALL available selection candidates again.
         const allPlayed = team.playedPlayerIds.length === team.players.length;
 
         if (allPlayed) {
@@ -92,7 +83,6 @@ export function RepSelectionModal({ teams, onConfirm }: RepSelectionModalProps) 
                                     ))}
 
                                     {available.length === 0 && (
-                                        // This safety case shouldn't happen with our logic, but fallback
                                         <div className="text-sm text-red-400 text-center italic">
                                             No eligible players?
                                         </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Play } from 'lucide-react';
-// import { cn } from '../lib/utils'; // Fixed import path
 
 interface InputScreenProps {
     onStartGame: (players: string[]) => void;

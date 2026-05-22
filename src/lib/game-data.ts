@@ -66,27 +66,17 @@ export const generateGameData = (customCategories?: Category[]): Category[] => {
 
     let cardTypeIndex = 0;
     cardIndices.forEach(index => {
-        // Cycle card types if we have more slots than types (unlikely with 9 limit but safe)
         if (cardTypeIndex < cardTypes.length) {
             availableForCards[index].rewardCard = cardTypes[cardTypeIndex];
             cardTypeIndex++;
         }
     });
 
-    // If using custom categories, we might need to reconstruct the structure if we modified objects in allQuestions
-    // Since objects are by reference, 'categories' should already see the updates (isDoubleJeopardy etc)
-    // assuming 'allQuestions' contains references to the objects inside 'categories'.
-    // Yes, push(...cat.questions) pushes references.
-
     return categories;
 };
 
 export const generateFinalJeopardyQuestions = (customQuestions?: Question[]): Question[] => {
     if (customQuestions && customQuestions.length > 0) {
-        // Requirement: "if there are not enough questions, just repeat a quesiton again"
-        // We generate a "safe" amount, e.g., 20, to cover any reasonable number of rounds.
-        // We also ensure the last one is marked as potential tie-breaker (purely by position in usage).
-
         const finalQuestions: Question[] = [];
         const needed = 20;
 
@@ -94,7 +84,7 @@ export const generateFinalJeopardyQuestions = (customQuestions?: Question[]): Qu
             const sourceQ = customQuestions[i % customQuestions.length];
             finalQuestions.push({
                 ...sourceQ,
-                id: `fj-gen-${i}-${sourceQ.id}`, // Unique ID for React keys
+                id: `fj-gen-${i}-${sourceQ.id}`,
                 text: (i >= customQuestions.length) ? `${sourceQ.text} (Repeated)` : sourceQ.text
             });
         }

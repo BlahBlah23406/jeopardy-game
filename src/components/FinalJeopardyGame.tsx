@@ -12,37 +12,14 @@ interface FinalJeopardyGameProps {
 export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }: FinalJeopardyGameProps) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [phase, setPhase] = useState<'SELECTION' | 'QUESTION' | 'REVEAL'>('SELECTION');
-    // const [selectedPlayer, setSelectedPlayer] = useState<{ teamId: string, player: Player } | null>(null); // Unused
     const [answers, setAnswers] = useState<Record<string, { playerId: string, isCorrect: boolean }>>({});
-
-    // Calculate max rounds based on team size (assuming equal teams, otherwise min size)
-    // Rule: N - 1 questions. 
-    // Wait, the Prompt said: "reveal as many as the one minus max amount of members on the biggest team is"
-    // So if biggest team has 4 members -> 3 rounds.
-    // If Tie -> Tie Breaker Question (Index 6 in our list of 7)
 
     const maxTeamSize = Math.max(...teams.map(t => t.players.length));
     const totalRounds = Math.max(1, maxTeamSize - 1);
-
-    // Derived state for current active question
     const currentQuestion = questions[currentQuestionIndex];
-    // const isTieBreaker = currentQuestionIndex >= totalRounds; // Unused
 
-    // Actually, simple flow:
-    // Round 1 -> Index 0. 
-    // ...
-    // Round N-1 -> Index N-2.
-    // If Tie at end -> Index 6 (The Tie Breaker Question).
+    const [teamSelections, setTeamSelections] = useState<Record<string, string>>({});
 
-    // Let's refine the question flow logic.
-    // We only show questions up to totalRounds.
-
-    // "we will do one at a time, and the cpatain will select who will go, and then once one final jeopardy question is done, the next will be shown"
-    // This implies ALL teams answer the SAME question.
-
-    const [teamSelections, setTeamSelections] = useState<Record<string, string>>({}); // valid player IDs per team
-
-    // Check if all teams have selected a player
     const allTeamsSelected = teams.every(t => teamSelections[t.id]);
 
     const handlePlayerSelect = (teamId: string, playerId: string) => {
@@ -58,65 +35,36 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
     };
 
     const handleScore = (teamId: string, isCorrect: boolean) => {
-        // Just local state or update real team score?
-        // Let's update real team score
-        if (isCorrect) {
-            const team = teams.find(t => t.id === teamId);
-            if (team) {
-                // Check if this player already played?
-                // Logic says we enforce selection, so here we assume selection was valid.
-                // We need to mark player as played.
-                const playerId = teamSelections[teamId];
-
-                // Update Score & Played status
-                onUpdateTeam(teamId, {
-                    score: team.score + currentQuestion.points,
-                    playedPlayerIds: [...team.playedPlayerIds, playerId]
-                });
-            }
-        } else {
-            const team = teams.find(t => t.id === teamId);
-            if (team) {
-                const playerId = teamSelections[teamId];
-                // Still mark as played even if wrong? Usually yes.
-                onUpdateTeam(teamId, {
-                    playedPlayerIds: [...team.playedPlayerIds, playerId]
-                });
-            }
+        const team = teams.find(t => t.id === teamId);
+        if (team) {
+            const playerId = teamSelections[teamId];
+            onUpdateTeam(teamId, {
+                score: isCorrect ? team.score + currentQuestion.points : team.score,
+                playedPlayerIds: [...team.playedPlayerIds, playerId]
+            });
         }
 
-        // Track locally to disable buttons
         setAnswers(prev => ({ ...prev, [teamId]: { playerId: teamSelections[teamId], isCorrect } }));
     };
 
-    // Check if scoring is done for all
-    // const allScored = teams.every(t => answers[t.id] !== undefined); // Only if we track per round in `answers`
-    // We need to clear `answers` and `teamSelections` per round.
-
     const handleNext = () => {
-        // Check for Game End
         const isEnd = currentQuestionIndex + 1 >= totalRounds;
 
         if (isEnd) {
-            // Check for Tie
             const highestScore = Math.max(...teams.map(t => t.score));
             const winners = teams.filter(t => t.score === highestScore);
 
             if (winners.length > 1) {
-                // Trigger Tie Breaker
-                // Jump to the Tie Breaker Question (Last one)
                 setCurrentQuestionIndex(questions.length - 1);
                 resetRound();
             } else {
                 onGameEnd(winners[0].id);
             }
         } else {
-            // Is this the Tie breaker we just finished?
             if (currentQuestionIndex === questions.length - 1) {
-                // Find winner again
                 const highestScore = Math.max(...teams.map(t => t.score));
                 const winners = teams.filter(t => t.score === highestScore);
-                onGameEnd(winners[0].id); // Even if tie again, just pick one? Or Random?
+                onGameEnd(winners[0].id);
             } else {
                 setCurrentQuestionIndex(prev => prev + 1);
                 resetRound();
@@ -166,37 +114,26 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                                     <h3 className="font-bold text-center border-b border-gray-600 pb-2">{team.name}</h3>
                                     <div className="flex flex-col gap-2">
                                         {team.players.map(player => {
-                                            const isCaptain = team.players[0].id === player.id; // Captain is first
+                                            const isCaptain = team.players[0].id === player.id;
                                             const hasPlayed = team.playedPlayerIds.includes(player.id);
-
-                                            // Logic:
-                                            // 1. Captain CANNOT play (unless tie-breaker? "tie-breaker question and that wont have any player rep limitatation")
-                                            // 2. Others can play if they haven't played yet.
-                                            // 3. IF all eligible members (non-captains) have played, then reset (allow picking anyone again).
 
                                             const eligibleMembers = team.players.filter(p => p.id !== team.players[0].id);
                                             const playedEligible = eligibleMembers.filter(p => team.playedPlayerIds.includes(p.id));
                                             const allEligiblePlayed = playedEligible.length >= eligibleMembers.length;
 
-                                            // Tie breaker involves everyone.
                                             const isTieBreakerRound = currentQuestionIndex === questions.length - 1;
                                             const isSoloCaptainTeam = team.players.length === 1;
 
                                             let isSelectable = false;
 
                                             if (isTieBreakerRound) {
-                                                isSelectable = true; // No limits
+                                                isSelectable = true;
                                             } else {
                                                 if (isSoloCaptainTeam) {
-                                                    isSelectable = true; // Solo captain plays all rounds
+                                                    isSelectable = true;
                                                 } else if (isCaptain) {
-                                                    isSelectable = false; // Captain never plays in normal rounds
+                                                    isSelectable = false;
                                                 } else {
-                                                    // Allow if not played OR if all have played (reset condition)
-                                                    // But wait, if all have played, we allow re-selection.
-                                                    // Does selecting adding to playedPlayerIds block them again?
-                                                    // `hasPlayed` will be true. `allEligiblePlayed` will be true.
-                                                    // So `(!hasPlayed || allEligiblePlayed)` works.
                                                     isSelectable = !hasPlayed || allEligiblePlayed;
                                                 }
                                             }

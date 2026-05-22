@@ -8,8 +8,6 @@ export async function generateGameDataFromPrompt(prompt: string, apiKey: string)
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-
-    // The Gemini 1.5 models are exceptionally fast and work with standard API keys.
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const systemPrompt = `You are a helpful assistant that generates Jeopardy-style trivia game data.
