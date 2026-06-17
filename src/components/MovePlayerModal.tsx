@@ -38,6 +38,7 @@ export function MovePlayerModal({ isOpen, onClose, player, currentTeamId, teams,
                             </h2>
                             <button
                                 onClick={onClose}
+                                aria-label="Close move player modal"
                                 className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
                             >
                                 <X size={24} />

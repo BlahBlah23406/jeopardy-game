@@ -50,6 +50,7 @@ export const TeamAssignmentCard = memo(({ team, index, onUpdateTeam, onMovePlaye
                             onClick={() => onMovePlayerRequest(player, team.id)}
                             className="opacity-0 group-hover/player:opacity-100 p-1 hover:bg-game-primary/20 rounded text-gray-400 hover:text-game-accent transition-all"
                             title="Move Player"
+                            aria-label={`Move player ${player.name}`}
                         >
                             <ArrowRightLeft size={14} />
                         </button>

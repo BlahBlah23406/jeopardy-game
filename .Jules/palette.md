@@ -1,1 +1,4 @@
 ## 2024-05-22 - Input Validation Feedback\n**Learning:** Hidden form constraints (like "minimum 4 players") cause user frustration when only revealed on submission.\n**Action:** Always surface critical constraints (counts, limits) in helper text and validate in real-time.
+## 2026-06-17 - Dynamic ARIA labels for icon-only buttons
+**Learning:** This application extensively uses icon-only buttons (Close, Move, Remove, Plus, Minus) within lists (like player rosters and team assignments). A recurring pattern is missing `aria-label` attributes, making these lists inaccessible.
+**Action:** When adding `aria-label` attributes inside mapping functions, always use template literals with specific context (e.g., `Remove player ${player.name}` instead of just `Remove player`) to ensure screen reader users understand which item the action applies to.
