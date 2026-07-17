@@ -60,7 +60,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
             >
                 <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                     <h2 className="text-xl font-bold text-game-primary">Manage Team</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                    <button aria-label="Close team management" onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -70,6 +70,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                     <div>
                         <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">Team Name</label>
                         <input
+                            aria-label="Team name"
                             type="text"
                             maxLength={10}
                             value={name}
@@ -83,18 +84,21 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                         <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">Current Score</label>
                         <div className="flex items-center gap-2">
                             <button
+                                aria-label="Decrease score by 100"
                                 onClick={() => setScore(s => s - 100)}
                                 className="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors"
                             >
                                 <Minus className="w-4 h-4" />
                             </button>
                             <input
+                                aria-label={`Current score for ${team.name}`}
                                 type="number"
                                 value={score}
                                 onChange={(e) => setScore(Number(e.target.value))}
                                 className="flex-1 bg-black/30 border border-gray-600 rounded p-2 text-center text-xl font-mono text-game-accent focus:border-game-accent focus:outline-none"
                             />
                             <button
+                                aria-label="Increase score by 100"
                                 onClick={() => setScore(s => s + 100)}
                                 className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded transition-colors"
                             >
@@ -112,6 +116,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                                     <span className="text-white">{player.name}</span>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                         <button
+                                            aria-label={`Move player ${player.name}`}
                                             onClick={() => setMovingPlayer(player)}
                                             className="text-gray-400 hover:text-game-accent p-1"
                                             title="Move Player"
@@ -119,6 +124,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                                             <ArrowRightLeft className="w-4 h-4" />
                                         </button>
                                         <button
+                                            aria-label={`Remove player ${player.name}`}
                                             onClick={() => handleRemovePlayer(player.id)}
                                             className="text-gray-400 hover:text-red-400 p-1"
                                             title="Remove Player"
