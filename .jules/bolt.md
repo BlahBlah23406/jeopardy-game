@@ -1,0 +1,3 @@
+## 2024-05-24 - [Loop Extraction for Performance]
+**Learning:** Found a case where redundant array filtering (e.g. `team.players.filter(...)`) was happening inside a nested `.map()` loop during React rendering in `FinalJeopardyGame.tsx`. This causes an $O(N \cdot M^2)$ operation every render cycle (where $N$ is teams and $M$ is players), which was unnecessary as the conditions didn't depend on the current iteration of the inner loop.
+**Action:** Always inspect nested loops/maps within React renders. If a derived state calculation (like filtering an array based on props/state) only depends on the outer loop's item, extract it from the inner loop to prevent redundant recalculations and object allocations (saving $O(M^2)$ work and garbage collection pressure).
