@@ -60,7 +60,11 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
             >
                 <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                     <h2 className="text-xl font-bold text-game-primary">Manage Team</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white transition-colors"
+                        aria-label="Close manage team modal"
+                    >
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -85,6 +89,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                             <button
                                 onClick={() => setScore(s => s - 100)}
                                 className="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors"
+                                aria-label="Decrease score"
                             >
                                 <Minus className="w-4 h-4" />
                             </button>
@@ -93,10 +98,12 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                                 value={score}
                                 onChange={(e) => setScore(Number(e.target.value))}
                                 className="flex-1 bg-black/30 border border-gray-600 rounded p-2 text-center text-xl font-mono text-game-accent focus:border-game-accent focus:outline-none"
+                                aria-label="Current score"
                             />
                             <button
                                 onClick={() => setScore(s => s + 100)}
                                 className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded transition-colors"
+                                aria-label="Increase score"
                             >
                                 <Plus className="w-4 h-4" />
                             </button>
@@ -115,6 +122,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                                             onClick={() => setMovingPlayer(player)}
                                             className="text-gray-400 hover:text-game-accent p-1"
                                             title="Move Player"
+                                            aria-label={`Move player ${player.name}`}
                                         >
                                             <ArrowRightLeft className="w-4 h-4" />
                                         </button>
@@ -122,6 +130,7 @@ export function TeamManagementModal({ team, teams, onUpdateTeam, onClose }: Team
                                             onClick={() => handleRemovePlayer(player.id)}
                                             className="text-gray-400 hover:text-red-400 p-1"
                                             title="Remove Player"
+                                            aria-label={`Remove player ${player.name}`}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
