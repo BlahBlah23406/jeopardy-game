@@ -109,20 +109,21 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                         </div>
 
                         <div className="flex flex-wrap justify-center gap-4">
-                            {teams.map(team => (
+                            {teams.map(team => {
+                                const eligibleMembers = team.players.filter(p => p.id !== team.players[0].id);
+                                const playedEligible = eligibleMembers.filter(p => team.playedPlayerIds.includes(p.id));
+                                const allEligiblePlayed = playedEligible.length >= eligibleMembers.length;
+
+                                const isTieBreakerRound = currentQuestionIndex === questions.length - 1;
+                                const isSoloCaptainTeam = team.players.length === 1;
+
+                                return (
                                 <div key={team.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col gap-3 flex-1 min-w-[200px] max-w-[250px]">
                                     <h3 className="font-bold text-center border-b border-gray-600 pb-2">{team.name}</h3>
                                     <div className="flex flex-col gap-2">
                                         {team.players.map(player => {
                                             const isCaptain = team.players[0].id === player.id;
                                             const hasPlayed = team.playedPlayerIds.includes(player.id);
-
-                                            const eligibleMembers = team.players.filter(p => p.id !== team.players[0].id);
-                                            const playedEligible = eligibleMembers.filter(p => team.playedPlayerIds.includes(p.id));
-                                            const allEligiblePlayed = playedEligible.length >= eligibleMembers.length;
-
-                                            const isTieBreakerRound = currentQuestionIndex === questions.length - 1;
-                                            const isSoloCaptainTeam = team.players.length === 1;
 
                                             let isSelectable = false;
 
@@ -157,7 +158,8 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                                         })}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <div className="flex justify-center mt-8">
