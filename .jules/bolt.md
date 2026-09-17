@@ -1,0 +1,3 @@
+## 2024-05-19 - [O(M^2) to O(M) Array Filter Hoisting in FinalJeopardyGame]
+**Learning:** In React components with nested `.map` rendering loops (like teams -> players), derived state variables (like filtering arrays based on properties of the outer loop object) can cause O(M^2) calculations per render cycle if placed inside the inner loop.
+**Action:** Always hoist derived calculations that only depend on the outer loop object (e.g., `team`) up to the immediate scope of the outer `.map` callback, rather than calculating them inside the inner `.map` callback, to prevent redundant executions and optimize rendering performance.
