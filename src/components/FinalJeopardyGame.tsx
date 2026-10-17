@@ -113,48 +113,51 @@ export function FinalJeopardyGame({ teams, questions, onUpdateTeam, onGameEnd }:
                                 <div key={team.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col gap-3 flex-1 min-w-[200px] max-w-[250px]">
                                     <h3 className="font-bold text-center border-b border-gray-600 pb-2">{team.name}</h3>
                                     <div className="flex flex-col gap-2">
-                                        {team.players.map(player => {
-                                            const isCaptain = team.players[0].id === player.id;
-                                            const hasPlayed = team.playedPlayerIds.includes(player.id);
-
+                                        {(() => {
                                             const eligibleMembers = team.players.filter(p => p.id !== team.players[0].id);
                                             const playedEligible = eligibleMembers.filter(p => team.playedPlayerIds.includes(p.id));
                                             const allEligiblePlayed = playedEligible.length >= eligibleMembers.length;
 
                                             const isTieBreakerRound = currentQuestionIndex === questions.length - 1;
                                             const isSoloCaptainTeam = team.players.length === 1;
+                                            const selectedPlayerId = teamSelections[team.id];
 
-                                            let isSelectable = false;
+                                            return team.players.map(player => {
+                                                const isCaptain = team.players[0].id === player.id;
+                                                const hasPlayed = team.playedPlayerIds.includes(player.id);
 
-                                            if (isTieBreakerRound) {
-                                                isSelectable = true;
-                                            } else {
-                                                if (isSoloCaptainTeam) {
+                                                let isSelectable = false;
+
+                                                if (isTieBreakerRound) {
                                                     isSelectable = true;
-                                                } else if (isCaptain) {
-                                                    isSelectable = false;
                                                 } else {
-                                                    isSelectable = !hasPlayed || allEligiblePlayed;
+                                                    if (isSoloCaptainTeam) {
+                                                        isSelectable = true;
+                                                    } else if (isCaptain) {
+                                                        isSelectable = false;
+                                                    } else {
+                                                        isSelectable = !hasPlayed || allEligiblePlayed;
+                                                    }
                                                 }
-                                            }
 
-                                            const isSelected = teamSelections[team.id] === player.id;
+                                                const isSelected = selectedPlayerId === player.id;
 
-                                            return (
-                                                <button
-                                                    key={player.id}
-                                                    disabled={!isSelectable}
-                                                    onClick={() => handlePlayerSelect(team.id, player.id)}
-                                                    className={`
-                                                         p-2 rounded text-sm text-center transition-all
-                                                         ${isSelected ? 'bg-yellow-500 text-black font-bold ring-2 ring-white' : 'bg-gray-700 hover:bg-gray-600'}
-                                                         ${!isSelectable ? 'opacity-30 cursor-not-allowed' : ''}
-                                                     `}
-                                                >
-                                                    {player.name} {isCaptain ? '(C)' : ''}
-                                                </button>
-                                            );
-                                        })}
+                                                return (
+                                                    <button
+                                                        key={player.id}
+                                                        disabled={!isSelectable}
+                                                        onClick={() => handlePlayerSelect(team.id, player.id)}
+                                                        className={`
+                                                             p-2 rounded text-sm text-center transition-all
+                                                             ${isSelected ? 'bg-yellow-500 text-black font-bold ring-2 ring-white' : 'bg-gray-700 hover:bg-gray-600'}
+                                                             ${!isSelectable ? 'opacity-30 cursor-not-allowed' : ''}
+                                                         `}
+                                                    >
+                                                        {player.name} {isCaptain ? '(C)' : ''}
+                                                    </button>
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
                             ))}
